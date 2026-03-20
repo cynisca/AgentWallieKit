@@ -42,67 +42,71 @@ struct AnimationModifier: ViewModifier {
         return Double(ms) / 1000.0
     }
 
-    func body(content: Content) -> some View {
-        guard let animation = animation else {
-            return AnyView(content)
-        }
-
+    private var opacity: Double {
+        guard let animation = animation else { return 1 }
         switch animation.type {
-        case AnimationTypeValue.fadeIn:
-            return AnyView(
-                content
-                    .opacity(hasAppeared ? 1 : 0)
-                    .onAppear { triggerAnimation() }
-            )
-
-        case AnimationTypeValue.slideUp:
-            return AnyView(
-                content
-                    .opacity(hasAppeared ? 1 : 0)
-                    .offset(y: hasAppeared ? 0 : 30)
-                    .onAppear { triggerAnimation() }
-            )
-
-        case AnimationTypeValue.slideInLeft:
-            return AnyView(
-                content
-                    .opacity(hasAppeared ? 1 : 0)
-                    .offset(x: hasAppeared ? 0 : -30)
-                    .onAppear { triggerAnimation() }
-            )
-
-        case AnimationTypeValue.scaleUp:
-            return AnyView(
-                content
-                    .opacity(hasAppeared ? 1 : 0)
-                    .scaleEffect(hasAppeared ? 1 : 0.8)
-                    .onAppear { triggerAnimation() }
-            )
-
-        case AnimationTypeValue.bounce:
-            return AnyView(
-                content
-                    .scaleEffect(hasAppeared ? 1 : 0.8)
-                    .onAppear { triggerBounce() }
-            )
-
+        case AnimationTypeValue.fadeIn, AnimationTypeValue.slideUp, AnimationTypeValue.slideInLeft, AnimationTypeValue.scaleUp:
+            return hasAppeared ? 1 : 0
         case AnimationTypeValue.pulse:
-            return AnyView(
-                content
-                    .opacity(pulseValue ? 1.0 : 0.6)
-                    .onAppear { startPulse() }
-            )
-
-        case AnimationTypeValue.shake:
-            return AnyView(
-                content
-                    .offset(x: shakeOffset)
-                    .onAppear { startShake() }
-            )
-
+            return pulseValue ? 1.0 : 0.6
         default:
-            return AnyView(content)
+            return 1
         }
+    }
+
+    private var xOffset: CGFloat {
+        guard let animation = animation else { return 0 }
+        switch animation.type {
+        case AnimationTypeValue.slideInLeft:
+            return hasAppeared ? 0 : -30
+        case AnimationTypeValue.shake:
+            return shakeOffset
+        default:
+            return 0
+        }
+    }
+
+    private var yOffset: CGFloat {
+        guard let animation = animation else { return 0 }
+        switch animation.type {
+        case AnimationTypeValue.slideUp:
+            return hasAppeared ? 0 : 30
+        default:
+            return 0
+        }
+    }
+
+    private var scale: CGFloat {
+        guard let animation = animation else { return 1 }
+        switch animation.type {
+        case AnimationTypeValue.scaleUp, AnimationTypeValue.bounce:
+            return hasAppeared ? 1 : 0.8
+        default:
+            return 1
+        }
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .opacity(opacity)
+            .offset(x: xOffset, y: yOffset)
+            .scaleEffect(scale)
+            .task {
+                guard let animation = animation else { return }
+                switch animation.type {
+                case AnimationTypeValue.fadeIn, AnimationTypeValue.slideUp,
+                     AnimationTypeValue.slideInLeft, AnimationTypeValue.scaleUp:
+                    triggerAnimation()
+                case AnimationTypeValue.bounce:
+                    triggerBounce()
+                case AnimationTypeValue.pulse:
+                    await startPulse()
+                case AnimationTypeValue.shake:
+                    await startShake()
+                default:
+                    break
+                }
+            }
     }
 
     // MARK: - Animation Triggers
@@ -119,28 +123,25 @@ struct AnimationModifier: ViewModifier {
         }
     }
 
-    private func startPulse() {
-        // Start after delay, then repeat forever
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-            withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
-                pulseValue = true
-            }
+    private func startPulse() async {
+        try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+        guard !Task.isCancelled else { return }
+        withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
+            pulseValue = true
         }
     }
 
-    private func startShake() {
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay) {
-            // Rapid horizontal oscillation
-            let shakeDuration = duration / 6
-            withAnimation(.easeInOut(duration: shakeDuration).repeatCount(6, autoreverses: true)) {
-                shakeOffset = 8
-            }
-            // Reset after shake completes
-            DispatchQueue.main.asyncAfter(deadline: .now() + duration) {
-                withAnimation(.easeOut(duration: shakeDuration)) {
-                    shakeOffset = 0
-                }
-            }
+    private func startShake() async {
+        try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+        guard !Task.isCancelled else { return }
+        let shakeDuration = duration / 6
+        withAnimation(.easeInOut(duration: shakeDuration).repeatCount(6, autoreverses: true)) {
+            shakeOffset = 8
+        }
+        try? await Task.sleep(nanoseconds: UInt64(duration * 1_000_000_000))
+        guard !Task.isCancelled else { return }
+        withAnimation(.easeOut(duration: shakeDuration)) {
+            shakeOffset = 0
         }
     }
 }

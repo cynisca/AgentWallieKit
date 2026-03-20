@@ -55,9 +55,11 @@ public final class CustomViewRegistry: @unchecked Sendable {
 
     /// Look up and build a registered view.
     func resolve(name: String, context: CustomViewContext) -> AnyView? {
+        let builder: ((CustomViewContext) -> AnyView)?
         lock.lock()
-        defer { lock.unlock() }
-        return builders[name]?(context)
+        builder = builders[name]
+        lock.unlock()
+        return builder?(context)
     }
 
     /// Check if a view is registered.

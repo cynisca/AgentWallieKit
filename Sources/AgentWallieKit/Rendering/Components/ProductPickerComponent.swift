@@ -25,19 +25,19 @@ struct ProductPickerComponentView: View {
 
     private var selectedColor: Color {
         resolveColor(data.props.selectedBorderColor, theme: theme)
-            ?? Color(hex: theme?.primary ?? "#007AFF")
+            ?? Color(hex: theme?.primary ?? PaywallTheme.defaultPrimary)
     }
 
     private var surfaceColor: Color {
-        Color(hex: theme?.surface ?? "#F2F2F7")
+        Color(hex: theme?.surface ?? PaywallTheme.defaultSurface)
     }
 
     private var textPrimaryColor: Color {
-        Color(hex: theme?.textPrimary ?? "#000000")
+        Color(hex: theme?.textPrimary ?? PaywallTheme.defaultTextPrimary)
     }
 
     private var textSecondaryColor: Color {
-        Color(hex: theme?.textSecondary ?? "#6B7280")
+        Color(hex: theme?.textSecondary ?? PaywallTheme.defaultTextSecondary)
     }
 
     @ViewBuilder

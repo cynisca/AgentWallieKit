@@ -138,6 +138,32 @@ public struct PaywallTheme: Codable, Sendable {
         cornerRadius = try container.decodeIfPresent(Double.self, forKey: .cornerRadius) ?? 12
         fontFamily = try container.decodeIfPresent(String.self, forKey: .fontFamily) ?? "system"
     }
+
+    /// Look up a theme property by its snake_case key name.
+    public func value(forKey key: String) -> String? {
+        switch key {
+        case "primary": return primary
+        case "secondary": return secondary
+        case "background": return background
+        case "text_primary": return textPrimary
+        case "text_secondary": return textSecondary
+        case "accent": return accent
+        case "surface": return surface
+        case "corner_radius": return String(cornerRadius)
+        case "font_family": return fontFamily
+        default: return nil
+        }
+    }
+
+    // MARK: - Default Color Constants
+
+    public static let defaultBackground = "#FFFFFF"
+    public static let defaultPrimary = "#007AFF"
+    public static let defaultSecondary = "#5856D6"
+    public static let defaultTextPrimary = "#000000"
+    public static let defaultTextSecondary = "#6B7280"
+    public static let defaultAccent = "#34C759"
+    public static let defaultSurface = "#F2F2F7"
 }
 
 // MARK: - Component Condition

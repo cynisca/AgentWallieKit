@@ -139,17 +139,19 @@ public struct ConditionEvaluator {
 
         // Theme properties
         if let theme = theme {
-            context["theme"] = [
-                "primary": theme.primary,
-                "secondary": theme.secondary,
-                "background": theme.background,
-                "text_primary": theme.textPrimary,
-                "text_secondary": theme.textSecondary,
-                "accent": theme.accent,
-                "surface": theme.surface,
-                "corner_radius": theme.cornerRadius,
-                "font_family": theme.fontFamily,
-            ] as [String: Any]
+            let knownKeys = ["primary", "secondary", "background", "text_primary", "text_secondary", "accent", "surface", "corner_radius", "font_family"]
+            var themeDict: [String: Any] = [:]
+            for key in knownKeys {
+                if let value = theme.value(forKey: key) {
+                    // Preserve numeric type for corner_radius
+                    if key == "corner_radius", let num = Double(value) {
+                        themeDict[key] = num
+                    } else {
+                        themeDict[key] = value
+                    }
+                }
+            }
+            context["theme"] = themeDict
         }
 
         return context

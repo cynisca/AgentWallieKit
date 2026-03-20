@@ -22,7 +22,7 @@ struct CTAButtonComponentView: View {
             }
             .frame(maxWidth: .infinity)
             .frame(height: data.style?.height?.doubleValue.map { CGFloat($0) } ?? 56)
-            .background(resolveColor(data.style?.backgroundColor, theme: theme) ?? Color(hex: theme?.primary ?? "#007AFF"))
+            .background(resolveColor(data.style?.backgroundColor, theme: theme) ?? Color(hex: theme?.primary ?? PaywallTheme.defaultPrimary))
             .cornerRadius(cornerRadius)
         }
         .modifier(StyleModifier(style: data.style, theme: theme, skipBackground: true, skipCornerRadius: true, skipHeight: true))

@@ -14,15 +14,9 @@ func resolveColor(_ colorString: String?, theme: PaywallTheme?) -> Color? {
             .replacingOccurrences(of: "}}", with: "")
             .trimmingCharacters(in: .whitespaces)
         if let theme = theme {
-            switch cleaned {
-            case "theme.primary": return Color(hex: theme.primary)
-            case "theme.secondary": return Color(hex: theme.secondary)
-            case "theme.background": return Color(hex: theme.background)
-            case "theme.text_primary": return Color(hex: theme.textPrimary)
-            case "theme.text_secondary": return Color(hex: theme.textSecondary)
-            case "theme.accent": return Color(hex: theme.accent)
-            case "theme.surface": return Color(hex: theme.surface)
-            default: break
+            let themeKey = cleaned.replacingOccurrences(of: "theme.", with: "")
+            if let value = theme.value(forKey: themeKey) {
+                return Color(hex: value)
             }
         }
         return nil

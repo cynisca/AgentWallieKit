@@ -11,7 +11,7 @@ struct ImageComponentView: View {
             switch phase {
             case .empty:
                 Rectangle()
-                    .fill(Color(hex: theme?.surface ?? "#F2F2F7"))
+                    .fill(Color(hex: theme?.surface ?? PaywallTheme.defaultSurface))
                     .overlay(ProgressView())
                     .frame(maxWidth: .infinity)
                     .aspectRatio(parsedAspectRatio, contentMode: .fit)
@@ -22,10 +22,10 @@ struct ImageComponentView: View {
                     .clipped()
             case .failure:
                 Rectangle()
-                    .fill(Color(hex: theme?.surface ?? "#F2F2F7"))
+                    .fill(Color(hex: theme?.surface ?? PaywallTheme.defaultSurface))
                     .overlay(
                         Image(systemName: "photo")
-                            .foregroundColor(Color(hex: theme?.textSecondary ?? "#6B7280"))
+                            .foregroundColor(Color(hex: theme?.textSecondary ?? PaywallTheme.defaultTextSecondary))
                     )
                     .frame(maxWidth: .infinity)
                     .aspectRatio(parsedAspectRatio, contentMode: .fit)

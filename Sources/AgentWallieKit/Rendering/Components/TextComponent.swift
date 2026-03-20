@@ -11,7 +11,7 @@ struct TextComponentView: View {
             .font(font(for: data.props.textStyle))
             .multilineTextAlignment(textAlignment(data.props.alignment))
             .frame(maxWidth: .infinity, alignment: frameAlignment(data.props.alignment))
-            .foregroundColor(resolveColor(data.style?.color ?? data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? "#000000"))
+            .foregroundColor(resolveColor(data.style?.color ?? data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? PaywallTheme.defaultTextPrimary))
             .modifier(StyleModifier(style: data.style, theme: theme))
     }
 

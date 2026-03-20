@@ -39,10 +39,10 @@ struct LinkRowComponentView: View {
 
     private var textColor: Color {
         resolveColor(data.style?.textColor ?? data.style?.color, theme: theme)
-            ?? Color(hex: theme?.textSecondary ?? "#6B7280")
+            ?? Color(hex: theme?.textSecondary ?? PaywallTheme.defaultTextSecondary)
     }
 
     private var separatorColor: Color {
-        Color(hex: theme?.textSecondary ?? "#6B7280").opacity(0.5)
+        Color(hex: theme?.textSecondary ?? PaywallTheme.defaultTextSecondary).opacity(0.5)
     }
 }

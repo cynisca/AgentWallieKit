@@ -17,7 +17,7 @@ struct RatingComponentView: View {
 
     private var textColor: Color {
         resolveColor(data.style?.textColor, theme: theme)
-            ?? Color(hex: theme?.textPrimary ?? "#000000")
+            ?? Color(hex: theme?.textPrimary ?? PaywallTheme.defaultTextPrimary)
     }
 
     var body: some View {
@@ -40,14 +40,14 @@ struct RatingComponentView: View {
             if let count = data.props.count {
                 Text("(\(formatCount(count)))")
                     .font(.system(size: (data.style?.fontSize ?? 16) * 0.85))
-                    .foregroundColor(Color(hex: theme?.textSecondary ?? "#6B7280"))
+                    .foregroundColor(Color(hex: theme?.textSecondary ?? PaywallTheme.defaultTextSecondary))
             }
 
             // Label
             if let label = data.props.label {
                 Text(label)
                     .font(.system(size: (data.style?.fontSize ?? 16) * 0.85))
-                    .foregroundColor(Color(hex: theme?.textSecondary ?? "#6B7280"))
+                    .foregroundColor(Color(hex: theme?.textSecondary ?? PaywallTheme.defaultTextSecondary))
             }
         }
         .modifier(StyleModifier(style: data.style, theme: theme))
