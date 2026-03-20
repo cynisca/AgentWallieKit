@@ -71,6 +71,16 @@ public struct PaywallSettings: Codable, Sendable {
         case scrollEnabled = "scroll_enabled"
         case safeAreaInsets = "safe_area_insets"
     }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        presentation = try container.decodeIfPresent(PresentationType.self, forKey: .presentation) ?? .modal
+        closeButton = try container.decodeIfPresent(Bool.self, forKey: .closeButton) ?? true
+        closeButtonDelayMs = try container.decodeIfPresent(Int.self, forKey: .closeButtonDelayMs) ?? 0
+        backgroundColor = try container.decodeIfPresent(String.self, forKey: .backgroundColor) ?? "#FFFFFF"
+        scrollEnabled = try container.decodeIfPresent(Bool.self, forKey: .scrollEnabled) ?? true
+        safeAreaInsets = try container.decodeIfPresent(Bool.self, forKey: .safeAreaInsets) ?? true
+    }
 }
 
 // MARK: - Theme
@@ -114,6 +124,19 @@ public struct PaywallTheme: Codable, Sendable {
         case textSecondary = "text_secondary"
         case cornerRadius = "corner_radius"
         case fontFamily = "font_family"
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        background = try container.decodeIfPresent(String.self, forKey: .background) ?? "#FFFFFF"
+        primary = try container.decodeIfPresent(String.self, forKey: .primary) ?? "#007AFF"
+        secondary = try container.decodeIfPresent(String.self, forKey: .secondary) ?? "#5856D6"
+        textPrimary = try container.decodeIfPresent(String.self, forKey: .textPrimary) ?? "#000000"
+        textSecondary = try container.decodeIfPresent(String.self, forKey: .textSecondary) ?? "#6B7280"
+        accent = try container.decodeIfPresent(String.self, forKey: .accent) ?? "#34C759"
+        surface = try container.decodeIfPresent(String.self, forKey: .surface) ?? "#F2F2F7"
+        cornerRadius = try container.decodeIfPresent(Double.self, forKey: .cornerRadius) ?? 12
+        fontFamily = try container.decodeIfPresent(String.self, forKey: .fontFamily) ?? "system"
     }
 }
 

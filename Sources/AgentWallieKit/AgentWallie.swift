@@ -140,6 +140,8 @@ public final class AgentWallie: @unchecked Sendable {
             return
         }
 
+        log(.info, "Evaluating placement '\(placement)' — \(config.campaigns.count) campaigns, \(config.paywalls.count) paywalls")
+
         let context = userMgr.buildContext()
 
         let result = PlacementEvaluator.evaluate(
@@ -152,22 +154,25 @@ public final class AgentWallie: @unchecked Sendable {
         )
 
         guard let result = result else {
-            // No campaign matched — run the handler (feature gate passes)
+            log(.info, "No campaign matched placement '\(placement)'")
             handler?()
             return
         }
 
         if result.isHoldout {
-            // Holdout — run the handler
+            log(.info, "User in holdout for placement '\(placement)'")
             handler?()
             return
         }
 
         guard let paywallId = result.paywallId,
               let schema = config.paywalls[paywallId] else {
+            log(.warn, "Paywall ID '\(result.paywallId ?? "nil")' not found in config. Available: \(Array(config.paywalls.keys))")
             handler?()
             return
         }
+
+        log(.info, "Matched paywall '\(schema.name)' for placement '\(placement)'")
 
         // Present the paywall
         Task { @MainActor in
