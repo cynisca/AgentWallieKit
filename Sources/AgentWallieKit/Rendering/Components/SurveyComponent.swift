@@ -47,7 +47,7 @@ struct SurveyComponentView: View {
             }
         }
         .padding(.horizontal, 16)
-        .modifier(StyleModifier(style: data.style))
+        .modifier(StyleModifier(style: data.style, theme: theme))
     }
 
     private func toggleOption(_ index: Int) {

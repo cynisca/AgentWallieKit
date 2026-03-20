@@ -27,7 +27,7 @@ struct CountdownTimerComponentView: View {
                 .fontWeight(.bold)
                 .foregroundColor(resolveColor(data.style?.color ?? data.style?.textColor, theme: theme) ?? .primary)
         }
-        .modifier(StyleModifier(style: data.style))
+        .modifier(StyleModifier(style: data.style, theme: theme))
         .onAppear {
             startTimer()
         }

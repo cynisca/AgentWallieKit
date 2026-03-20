@@ -26,6 +26,6 @@ struct StackComponentView: View {
                 }
             }
         }
-        .modifier(StyleModifier(style: data.style))
+        .modifier(StyleModifier(style: data.style, theme: theme))
     }
 }

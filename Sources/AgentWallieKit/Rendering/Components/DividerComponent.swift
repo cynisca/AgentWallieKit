@@ -11,6 +11,6 @@ struct DividerComponentView: View {
             .fill(resolveColor(data.props?.color, theme: theme) ?? Color.gray.opacity(0.3))
             .frame(height: CGFloat(data.props?.thickness ?? 1))
             .frame(maxWidth: .infinity)
-            .modifier(StyleModifier(style: data.style, skipHeight: true))
+            .modifier(StyleModifier(style: data.style, theme: theme, skipHeight: true))
     }
 }

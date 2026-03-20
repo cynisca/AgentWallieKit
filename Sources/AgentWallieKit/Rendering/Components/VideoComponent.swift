@@ -47,7 +47,7 @@ struct VideoComponentView: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .modifier(StyleModifier(style: data.style))
+        .modifier(StyleModifier(style: data.style, theme: theme))
         .onAppear {
             if data.props.autoplay {
                 initializePlayer()

@@ -41,6 +41,6 @@ struct SlidesComponentView: View {
                 .padding(.bottom, 4)
             }
         }
-        .modifier(StyleModifier(style: data.style))
+        .modifier(StyleModifier(style: data.style, theme: theme))
     }
 }

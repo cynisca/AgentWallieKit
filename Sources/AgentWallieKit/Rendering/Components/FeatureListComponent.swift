@@ -15,11 +15,11 @@ struct FeatureListComponentView: View {
                         .font(.body)
                     Text(item.text)
                         .font(.body)
-                        .foregroundColor(.primary)
+                        .foregroundColor(resolveColor(nil, theme: theme) ?? Color(hex: theme?.textPrimary ?? "#000000"))
                 }
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .modifier(StyleModifier(style: data.style))
+        .modifier(StyleModifier(style: data.style, theme: theme))
     }
 }
