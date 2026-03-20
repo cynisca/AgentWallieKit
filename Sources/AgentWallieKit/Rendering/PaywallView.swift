@@ -33,6 +33,7 @@ public struct PaywallView: View {
                 }
                 .padding(.horizontal, 16)
             }
+            .foregroundColor(Color(hex: schema.theme?.textPrimary ?? "#000000"))
             .applyIf(!schema.settings.safeAreaInsets) { view in
                 view.ignoresSafeArea()
             }
