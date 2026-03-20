@@ -15,7 +15,7 @@ struct FeatureListComponentView: View {
                         .font(.body)
                     Text(item.text)
                         .font(.body)
-                        .foregroundColor(resolveColor(nil, theme: theme) ?? Color(hex: theme?.textPrimary ?? "#000000"))
+                        .foregroundColor(resolveColor(data.style?.color ?? data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? "#000000"))
                 }
             }
         }
