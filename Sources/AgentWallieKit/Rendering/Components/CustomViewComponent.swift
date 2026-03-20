@@ -10,13 +10,13 @@ struct CustomViewComponentView: View {
         VStack {
             Text("Custom: \(data.props.viewName)")
                 .font(.subheadline)
-                .foregroundColor(resolveColor(data.style?.textColor, theme: theme) ?? .secondary)
+                .foregroundColor(resolveColor(data.style?.textColor, theme: theme) ?? Color(hex: theme?.textSecondary ?? "#6B7280"))
         }
         .frame(maxWidth: .infinity)
         .padding(16)
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .stroke(resolveColor(data.style?.borderColor, theme: theme) ?? Color.secondary.opacity(0.5), lineWidth: 1)
+                .stroke(resolveColor(data.style?.borderColor, theme: theme) ?? Color(hex: theme?.textSecondary ?? "#6B7280").opacity(0.5), lineWidth: 1)
         )
         .padding(.horizontal, 16)
         .modifier(StyleModifier(style: data.style, theme: theme))

@@ -11,7 +11,7 @@ struct FeatureListComponentView: View {
             ForEach(Array(data.props.items.enumerated()), id: \.offset) { _, item in
                 HStack(spacing: 12) {
                     Image(systemName: item.icon)
-                        .foregroundColor(resolveColor(data.props.iconColor, theme: theme) ?? .green)
+                        .foregroundColor(resolveColor(data.props.iconColor, theme: theme) ?? Color(hex: theme?.accent ?? "#34C759"))
                         .font(.body)
                     Text(item.text)
                         .font(.body)

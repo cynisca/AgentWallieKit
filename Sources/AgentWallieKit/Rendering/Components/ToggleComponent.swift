@@ -23,7 +23,7 @@ struct ToggleComponentView: View {
     var body: some View {
         Toggle(isOn: $isOn) {
             Text(data.props.label)
-                .foregroundColor(resolveColor(data.style?.textColor, theme: theme) ?? .primary)
+                .foregroundColor(resolveColor(data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? "#000000"))
         }
         .tint(resolveColor(data.style?.color, theme: theme))
         .padding(.horizontal, 16)

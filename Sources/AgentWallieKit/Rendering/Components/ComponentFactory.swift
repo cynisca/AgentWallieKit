@@ -8,7 +8,8 @@ func resolveColor(_ colorString: String?, theme: PaywallTheme?) -> Color? {
     guard let str = colorString, !str.isEmpty else { return nil }
 
     // Theme references like "{{ theme.primary }}" — strip template syntax
-    if str.contains("theme.") {
+    // Only match actual template syntax (must contain {{ and }})
+    if str.contains("{{") && str.contains("theme.") {
         let cleaned = str.replacingOccurrences(of: "{{", with: "")
             .replacingOccurrences(of: "}}", with: "")
             .trimmingCharacters(in: .whitespaces)

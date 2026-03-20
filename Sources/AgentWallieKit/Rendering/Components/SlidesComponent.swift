@@ -33,8 +33,8 @@ struct SlidesComponentView: View {
                     ForEach(0..<data.props.pages.count, id: \.self) { index in
                         Circle()
                             .fill(index == currentPage
-                                ? (resolveColor(nil, theme: theme) ?? Color.primary)
-                                : Color.secondary.opacity(0.4))
+                                ? Color(hex: theme?.primary ?? "#007AFF")
+                                : Color(hex: theme?.textSecondary ?? "#6B7280").opacity(0.4))
                             .frame(width: 8, height: 8)
                     }
                 }

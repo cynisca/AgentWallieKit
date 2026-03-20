@@ -20,12 +20,12 @@ struct CountdownTimerComponentView: View {
             if let label = data.props.label {
                 Text(label)
                     .font(.caption)
-                    .foregroundColor(resolveColor(data.style?.textColor, theme: theme) ?? .secondary)
+                    .foregroundColor(resolveColor(data.style?.textColor, theme: theme) ?? Color(hex: theme?.textSecondary ?? "#6B7280"))
             }
             Text(formattedTime)
                 .font(.system(.title2, design: .monospaced))
                 .fontWeight(.bold)
-                .foregroundColor(resolveColor(data.style?.color ?? data.style?.textColor, theme: theme) ?? .primary)
+                .foregroundColor(resolveColor(data.style?.color ?? data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? "#000000"))
         }
         .modifier(StyleModifier(style: data.style, theme: theme))
         .onAppear {
