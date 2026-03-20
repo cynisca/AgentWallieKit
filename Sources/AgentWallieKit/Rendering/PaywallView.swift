@@ -149,7 +149,19 @@ public struct PaywallView: View {
             SurveyComponentView(data: data, theme: schema.theme, onAction: handleAction)
 
         case .customView(let data):
-            CustomViewComponentView(data: data, theme: schema.theme)
+            CustomViewComponentView(
+                data: data,
+                theme: schema.theme,
+                products: schema.products,
+                userAttributes: [:],  // TODO: wire from UserManager
+                onAction: handleAction
+            )
+
+        case .badge(let data):
+            BadgeComponentView(data: data, theme: schema.theme)
+
+        case .rating(let data):
+            RatingComponentView(data: data, theme: schema.theme)
 
         case .unknown:
             EmptyView()

@@ -258,7 +258,7 @@ final class DarkThemeTests: XCTestCase {
             id: "custom",
             props: CustomViewComponentData.CustomViewProps(viewName: "MyView")
         )
-        let view = CustomViewComponentView(data: data, theme: darkTheme)
+        let view = CustomViewComponentView(data: data, theme: darkTheme, products: nil, userAttributes: [:], onAction: { _, _ in })
         XCTAssertNotNil(view, "CustomViewComponentView should render with dark theme")
     }
 

@@ -581,4 +581,107 @@ final class PaywallSchemaTests: XCTestCase {
         XCTAssertEqual(decoded.cornerRadius?.doubleValue, 8)
         XCTAssertEqual(decoded.opacity, 0.9)
     }
+
+    // MARK: - ComponentCondition
+
+    func testConditionDecodeOnComponent() throws {
+        let json = """
+        {
+            "type": "text",
+            "id": "t1",
+            "props": {"content": "Trial text"},
+            "condition": {"field": "user.has_trial", "operator": "is", "value": true}
+        }
+        """
+        let component = try decodeComponent(json)
+        if case .text(let d) = component {
+            XCTAssertNotNil(d.condition)
+            XCTAssertEqual(d.condition?.field, "user.has_trial")
+            XCTAssertEqual(d.condition?.operator, "is")
+        } else {
+            XCTFail("Expected text component")
+        }
+    }
+
+    // MARK: - ComponentAnimation
+
+    func testAnimationDecodeOnComponent() throws {
+        let json = """
+        {
+            "type": "text",
+            "id": "t2",
+            "props": {"content": "Animated"},
+            "animation": {"type": "fade_in", "duration_ms": 300, "delay_ms": 100}
+        }
+        """
+        let component = try decodeComponent(json)
+        if case .text(let d) = component {
+            XCTAssertNotNil(d.animation)
+            XCTAssertEqual(d.animation?.type, "fade_in")
+            XCTAssertEqual(d.animation?.durationMs, 300)
+            XCTAssertEqual(d.animation?.delayMs, 100)
+        } else {
+            XCTFail("Expected text component")
+        }
+    }
+
+    // MARK: - BackgroundGradient
+
+    func testBackgroundGradientOnStyle() throws {
+        let json = """
+        {
+            "colors": ["#FF0000", "#0000FF"],
+            "direction": "vertical"
+        }
+        """
+        let data = json.data(using: .utf8)!
+        let gradient = try JSONDecoder().decode(BackgroundGradient.self, from: data)
+        XCTAssertEqual(gradient.colors, ["#FF0000", "#0000FF"])
+        XCTAssertEqual(gradient.direction, "vertical")
+
+        let roundTripped = try roundTrip(gradient)
+        XCTAssertEqual(roundTripped.colors, ["#FF0000", "#0000FF"])
+        XCTAssertEqual(roundTripped.direction, "vertical")
+    }
+
+    func testComponentStyleWithGradient() throws {
+        var style = ComponentStyle()
+        style.backgroundGradient = BackgroundGradient(colors: ["#000", "#FFF"], direction: "horizontal")
+        let decoded = try roundTrip(style)
+        XCTAssertNotNil(decoded.backgroundGradient)
+        XCTAssertEqual(decoded.backgroundGradient?.colors, ["#000", "#FFF"])
+        XCTAssertEqual(decoded.backgroundGradient?.direction, "horizontal")
+    }
+
+    // MARK: - CustomView with customData
+
+    func testCustomViewWithCustomData() throws {
+        let json = """
+        {
+            "type": "custom_view",
+            "id": "cv1",
+            "props": {
+                "view_name": "PricingCard",
+                "custom_data": {"title": "Hello", "count": 42}
+            }
+        }
+        """
+        let component = try decodeComponent(json)
+        if case .customView(let d) = component {
+            XCTAssertEqual(d.props.viewName, "PricingCard")
+            XCTAssertNotNil(d.props.customData)
+            if case .string(let title) = d.props.customData?["title"] {
+                XCTAssertEqual(title, "Hello")
+            } else {
+                XCTFail("Expected string value for title")
+            }
+            if case .number(let count) = d.props.customData?["count"] {
+                XCTAssertEqual(count, 42)
+            } else {
+                XCTFail("Expected number value for count")
+            }
+        } else {
+            XCTFail("Expected custom_view component")
+        }
+    }
 }
