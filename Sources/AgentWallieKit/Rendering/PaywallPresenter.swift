@@ -13,6 +13,7 @@ public final class PaywallPresenter: @unchecked Sendable {
     @MainActor
     public func present(
         schema: PaywallSchema,
+        resolvedProducts: [ResolvedProductInfo]? = nil,
         onAction: @escaping (TapBehavior, String?) -> Void,
         onDismiss: @escaping () -> Void
     ) {
@@ -26,6 +27,7 @@ public final class PaywallPresenter: @unchecked Sendable {
 
         let paywallView = PaywallView(
             schema: schema,
+            resolvedProducts: resolvedProducts,
             onAction: onAction,
             onDismiss: {
                 rootVC.presentedViewController?.dismiss(animated: true)

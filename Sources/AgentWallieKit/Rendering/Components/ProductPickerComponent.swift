@@ -5,8 +5,14 @@ import SwiftUI
 struct ProductPickerComponentView: View {
     let data: ProductPickerComponentData
     let products: [ProductSlot]
+    let resolvedProducts: [ResolvedProductInfo]
     let theme: PaywallTheme?
     @Binding var selectedProductIndex: Int
+
+    /// Find the resolved product info for a given slot.
+    private func resolvedProduct(forSlot slot: String) -> ResolvedProductInfo? {
+        resolvedProducts.first(where: { $0.slot == slot })
+    }
 
     var body: some View {
         Group {
@@ -43,26 +49,57 @@ struct ProductPickerComponentView: View {
     @ViewBuilder
     private var productButtons: some View {
         ForEach(Array(products.enumerated()), id: \.element.slot) { index, product in
+            let resolved = resolvedProduct(forSlot: product.slot)
             Button(action: { selectedProductIndex = index }) {
-                Text(product.label)
-                    .font(.subheadline)
-                    .fontWeight(index == selectedProductIndex ? .bold : .regular)
-                    .foregroundColor(index == selectedProductIndex ? textPrimaryColor : textSecondaryColor)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 16)
-                    .background(
-                        RoundedRectangle(cornerRadius: CGFloat(theme?.cornerRadius ?? 12))
-                            .fill(surfaceColor)
-                    )
-                    .overlay(
-                        RoundedRectangle(cornerRadius: CGFloat(theme?.cornerRadius ?? 12))
-                            .stroke(
-                                index == selectedProductIndex
-                                    ? selectedColor
-                                    : Color.clear,
-                                lineWidth: 2
-                            )
-                    )
+                VStack(spacing: 4) {
+                    Text(product.label)
+                        .font(.subheadline)
+                        .fontWeight(index == selectedProductIndex ? .bold : .regular)
+                        .foregroundColor(index == selectedProductIndex ? textPrimaryColor : textSecondaryColor)
+
+                    if let resolved = resolved, !resolved.price.isEmpty {
+                        Text("\(resolved.price)\(resolved.periodLabel)")
+                            .font(.caption)
+                            .fontWeight(.medium)
+                            .foregroundColor(index == selectedProductIndex ? textPrimaryColor : textSecondaryColor)
+                    }
+
+                    if let trialPeriod = resolved?.trialPeriod,
+                       let trialPrice = resolved?.trialPrice {
+                        Text("\(trialPeriod) \(trialPrice.lowercased()) trial")
+                            .font(.caption2)
+                            .foregroundColor(index == selectedProductIndex ? selectedColor : textSecondaryColor)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 16)
+                .background(
+                    RoundedRectangle(cornerRadius: CGFloat(theme?.cornerRadius ?? 12))
+                        .fill(surfaceColor)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: CGFloat(theme?.cornerRadius ?? 12))
+                        .stroke(
+                            index == selectedProductIndex
+                                ? selectedColor
+                                : Color.clear,
+                            lineWidth: 2
+                        )
+                )
+                .overlay(alignment: .topTrailing) {
+                    if data.props.showSavingsBadge == true,
+                       let savings = resolved?.savingsPercentage {
+                        Text("Save \(savings)%")
+                            .font(.caption2)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(selectedColor)
+                            .cornerRadius(8)
+                            .offset(x: -8, y: -8)
+                    }
+                }
             }
         }
     }

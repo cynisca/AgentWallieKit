@@ -6,15 +6,27 @@ struct CTAButtonComponentView: View {
     let data: CTAButtonComponentData
     let theme: PaywallTheme?
     let onAction: (TapBehavior, String?) -> Void
+    var resolver: ExpressionResolver?
+
+    private var resolvedText: String {
+        guard let resolver = resolver else { return data.props.text }
+        return resolver.resolve(data.props.text)
+    }
+
+    private var resolvedSubtitle: String? {
+        guard let subtitle = data.props.subtitle else { return nil }
+        guard let resolver = resolver else { return subtitle }
+        return resolver.resolve(subtitle)
+    }
 
     var body: some View {
         Button(action: { onAction(data.props.action, data.props.product) }) {
             VStack(spacing: 4) {
-                Text(data.props.text)
+                Text(resolvedText)
                     .font(.headline)
                     .foregroundColor(resolveColor(data.style?.textColor, theme: theme) ?? .white)
 
-                if let subtitle = data.props.subtitle {
+                if let subtitle = resolvedSubtitle {
                     Text(subtitle)
                         .font(.subheadline)
                         .foregroundColor((resolveColor(data.style?.textColor, theme: theme) ?? .white).opacity(0.8))

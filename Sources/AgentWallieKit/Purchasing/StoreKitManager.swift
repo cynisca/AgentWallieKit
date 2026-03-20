@@ -8,6 +8,9 @@ public final class StoreKitManager: PurchaseController, @unchecked Sendable {
     /// Callback when a subscription status changes.
     public var onTransactionUpdate: ((StoreKit.Transaction) -> Void)?
 
+    /// Product cache for avoiding redundant StoreKit fetches during purchase.
+    public var productCache: StoreKitProductCache?
+
     public init() {
         startTransactionListener()
     }
@@ -19,9 +22,16 @@ public final class StoreKitManager: PurchaseController, @unchecked Sendable {
     // MARK: - PurchaseController
 
     public func purchase(productId: String) async throws -> PurchaseResult {
-        let products = try await StoreKit.Product.products(for: [productId])
-        guard let product = products.first else {
-            throw StoreKitError.productNotFound
+        // Check cache first to avoid redundant network fetch
+        let product: StoreKit.Product
+        if let cached = await productCache?.product(for: productId) {
+            product = cached
+        } else {
+            let products = try await StoreKit.Product.products(for: [productId])
+            guard let fetched = products.first else {
+                throw StoreKitError.productNotFound
+            }
+            product = fetched
         }
 
         let result = try await product.purchase()

@@ -112,6 +112,7 @@ final class DarkThemeTests: XCTestCase {
         let view = ProductPickerComponentView(
             data: data,
             products: products,
+            resolvedProducts: [],
             theme: darkTheme,
             selectedProductIndex: .constant(0)
         )

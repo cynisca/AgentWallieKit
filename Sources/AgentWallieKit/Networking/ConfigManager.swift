@@ -12,6 +12,10 @@ public final class ConfigManager: @unchecked Sendable {
     /// How often to refresh config (in seconds). Default: 5 minutes.
     public var refreshInterval: TimeInterval = 300
 
+    /// Callback fired after config is fetched (both initial and refresh).
+    /// Use this to trigger product pre-fetching and resolution.
+    public var onConfigFetched: ((SDKConfig) -> Void)?
+
     public init(apiClient: APIClient, defaults: UserDefaults = .standard) {
         self.apiClient = apiClient
         self.defaults = defaults
@@ -23,6 +27,7 @@ public final class ConfigManager: @unchecked Sendable {
         let newConfig = try await apiClient.fetchConfig()
         self.config = newConfig
         cacheConfig(newConfig)
+        onConfigFetched?(newConfig)
     }
 
     /// Start periodic config refresh.
