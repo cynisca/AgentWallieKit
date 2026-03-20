@@ -20,7 +20,24 @@ struct ProductPickerComponentView: View {
                 }
             }
         }
-        .modifier(StyleModifier(style: data.style))
+        .modifier(StyleModifier(style: data.style, theme: theme))
+    }
+
+    private var selectedColor: Color {
+        resolveColor(data.props.selectedBorderColor, theme: theme)
+            ?? Color(hex: theme?.primary ?? "#007AFF")
+    }
+
+    private var surfaceColor: Color {
+        Color(hex: theme?.surface ?? "#F2F2F7")
+    }
+
+    private var textPrimaryColor: Color {
+        Color(hex: theme?.textPrimary ?? "#000000")
+    }
+
+    private var textSecondaryColor: Color {
+        Color(hex: theme?.textSecondary ?? "#6B7280")
     }
 
     @ViewBuilder
@@ -30,20 +47,18 @@ struct ProductPickerComponentView: View {
                 Text(product.label)
                     .font(.subheadline)
                     .fontWeight(index == selectedProductIndex ? .bold : .regular)
-                    .foregroundColor(index == selectedProductIndex ? .white : .primary)
+                    .foregroundColor(index == selectedProductIndex ? textPrimaryColor : textSecondaryColor)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 16)
                     .background(
                         RoundedRectangle(cornerRadius: CGFloat(theme?.cornerRadius ?? 12))
-                            .fill(index == selectedProductIndex
-                                ? (resolveColor(data.props.selectedBorderColor, theme: theme) ?? Color.blue)
-                                : Color.gray.opacity(0.15))
+                            .fill(surfaceColor)
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: CGFloat(theme?.cornerRadius ?? 12))
                             .stroke(
                                 index == selectedProductIndex
-                                    ? (resolveColor(data.props.selectedBorderColor, theme: theme) ?? Color.blue)
+                                    ? selectedColor
                                     : Color.clear,
                                 lineWidth: 2
                             )

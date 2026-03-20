@@ -28,7 +28,7 @@ struct ToggleComponentView: View {
         .tint(resolveColor(data.style?.color, theme: theme))
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .modifier(StyleModifier(style: data.style))
+        .modifier(StyleModifier(style: data.style, theme: theme))
         .onChange(of: isOn) { newValue in
             if let linkedProduct = data.props.linkedProduct, newValue {
                 onAction(.selectProduct, linkedProduct)

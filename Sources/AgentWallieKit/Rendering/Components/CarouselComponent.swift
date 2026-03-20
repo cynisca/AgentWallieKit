@@ -37,7 +37,7 @@ struct CarouselComponentView: View {
                 .padding(.bottom, 4)
             }
         }
-        .modifier(StyleModifier(style: data.style))
+        .modifier(StyleModifier(style: data.style, theme: theme))
         .onAppear {
             if data.props.autoScroll && data.children.count > 1 {
                 startAutoScroll()

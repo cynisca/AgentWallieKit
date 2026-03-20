@@ -11,8 +11,8 @@ struct TextComponentView: View {
             .font(font(for: data.props.textStyle))
             .multilineTextAlignment(textAlignment(data.props.alignment))
             .frame(maxWidth: .infinity, alignment: frameAlignment(data.props.alignment))
-            .foregroundColor(resolveColor(data.style?.color ?? data.style?.textColor, theme: theme))
-            .modifier(StyleModifier(style: data.style))
+            .foregroundColor(resolveColor(data.style?.color ?? data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? "#000000"))
+            .modifier(StyleModifier(style: data.style, theme: theme))
     }
 
     private func font(for textStyle: String?) -> Font {

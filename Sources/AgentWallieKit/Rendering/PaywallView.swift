@@ -31,14 +31,20 @@ public struct PaywallView: View {
                         renderComponent(component)
                     }
                 }
-                .padding(.horizontal, 0)
+                .padding(.horizontal, 16)
+            }
+            .applyIf(!schema.settings.safeAreaInsets) { view in
+                view.ignoresSafeArea()
             }
 
             if schema.settings.closeButton {
                 Button(action: { onDismiss() }) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.secondary)
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(closeButtonForeground)
+                        .frame(width: 30, height: 30)
+                        .background(Color.black.opacity(0.15))
+                        .clipShape(Circle())
                         .padding(16)
                 }
             }
@@ -47,7 +53,20 @@ public struct PaywallView: View {
 
     private var backgroundColor: Color {
         let bgStr = schema.settings.backgroundColor
-        return resolveColor(bgStr, theme: schema.theme) ?? Color.white
+        // If settings has an explicit non-white background, use it
+        if let resolved = resolveColor(bgStr, theme: schema.theme), bgStr != "#FFFFFF" {
+            return resolved
+        }
+        // Otherwise fall back to theme.background
+        return Color(hex: schema.theme?.background ?? "#FFFFFF")
+    }
+
+    private var closeButtonForeground: Color {
+        // Use a contrasting color based on background
+        if let theme = schema.theme {
+            return Color(hex: theme.textPrimary)
+        }
+        return .secondary
     }
 
     @ViewBuilder

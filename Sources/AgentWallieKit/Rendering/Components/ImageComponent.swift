@@ -10,25 +10,32 @@ struct ImageComponentView: View {
         AsyncImage(url: URL(string: data.props.src)) { phase in
             switch phase {
             case .empty:
-                ProgressView()
+                Rectangle()
+                    .fill(Color(hex: theme?.surface ?? "#F2F2F7"))
+                    .overlay(ProgressView())
                     .frame(maxWidth: .infinity)
                     .aspectRatio(parsedAspectRatio, contentMode: .fit)
             case .success(let image):
                 image
                     .resizable()
-                    .aspectRatio(contentMode: contentMode)
+                    .aspectRatio(parsedAspectRatio, contentMode: contentMode)
                     .clipped()
             case .failure:
-                Image(systemName: "photo")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .foregroundColor(.secondary)
+                Rectangle()
+                    .fill(Color(hex: theme?.surface ?? "#F2F2F7"))
+                    .overlay(
+                        Image(systemName: "photo")
+                            .foregroundColor(Color(hex: theme?.textSecondary ?? "#6B7280"))
+                    )
                     .frame(maxWidth: .infinity)
+                    .aspectRatio(parsedAspectRatio, contentMode: .fit)
             @unknown default:
                 EmptyView()
             }
         }
-        .modifier(StyleModifier(style: data.style))
+        .applyOptionalCornerRadius(data.style?.cornerRadius?.doubleValue.map { CGFloat($0) })
+        .clipped()
+        .modifier(StyleModifier(style: data.style, theme: theme, skipCornerRadius: true))
     }
 
     private var parsedAspectRatio: CGFloat? {

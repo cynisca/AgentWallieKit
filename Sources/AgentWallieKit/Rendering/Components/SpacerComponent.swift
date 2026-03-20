@@ -9,6 +9,6 @@ struct SpacerComponentView: View {
     var body: some View {
         Spacer()
             .frame(height: data.style?.height?.doubleValue.map { CGFloat($0) } ?? 16)
-            .modifier(StyleModifier(style: data.style, skipHeight: true))
+            .modifier(StyleModifier(style: data.style, theme: theme, skipHeight: true))
     }
 }

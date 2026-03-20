@@ -25,7 +25,7 @@ struct CTAButtonComponentView: View {
             .background(resolveColor(data.style?.backgroundColor, theme: theme) ?? Color.blue)
             .cornerRadius(cornerRadius)
         }
-        .modifier(StyleModifier(style: data.style, skipBackground: true, skipCornerRadius: true, skipHeight: true))
+        .modifier(StyleModifier(style: data.style, theme: theme, skipBackground: true, skipCornerRadius: true, skipHeight: true))
     }
 
     private var cornerRadius: CGFloat {

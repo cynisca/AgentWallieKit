@@ -13,7 +13,7 @@ struct LinkRowComponentView: View {
                 if index > 0, let separator = data.props.separator {
                     Text(separator)
                         .font(.system(size: fontSize))
-                        .foregroundColor(textColor)
+                        .foregroundColor(separatorColor)
                 }
 
                 Button(action: {
@@ -30,7 +30,7 @@ struct LinkRowComponentView: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .modifier(StyleModifier(style: data.style))
+        .modifier(StyleModifier(style: data.style, theme: theme))
     }
 
     private var fontSize: CGFloat {
@@ -38,6 +38,11 @@ struct LinkRowComponentView: View {
     }
 
     private var textColor: Color {
-        resolveColor(data.style?.textColor ?? data.style?.color, theme: theme) ?? .secondary
+        resolveColor(data.style?.textColor ?? data.style?.color, theme: theme)
+            ?? Color(hex: theme?.textSecondary ?? "#6B7280")
+    }
+
+    private var separatorColor: Color {
+        Color(hex: theme?.textSecondary ?? "#6B7280").opacity(0.5)
     }
 }

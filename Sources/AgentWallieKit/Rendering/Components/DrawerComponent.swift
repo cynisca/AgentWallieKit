@@ -53,6 +53,6 @@ struct DrawerComponentView: View {
                 .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .modifier(StyleModifier(style: data.style))
+        .modifier(StyleModifier(style: data.style, theme: theme))
     }
 }

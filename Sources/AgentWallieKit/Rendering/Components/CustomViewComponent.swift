@@ -19,6 +19,6 @@ struct CustomViewComponentView: View {
                 .stroke(resolveColor(data.style?.borderColor, theme: theme) ?? Color.secondary.opacity(0.5), lineWidth: 1)
         )
         .padding(.horizontal, 16)
-        .modifier(StyleModifier(style: data.style))
+        .modifier(StyleModifier(style: data.style, theme: theme))
     }
 }
