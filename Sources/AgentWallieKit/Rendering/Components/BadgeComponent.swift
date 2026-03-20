@@ -12,7 +12,7 @@ struct BadgeComponentView: View {
 
     private var themeColor: Color {
         resolveColor(data.style?.color ?? data.style?.textColor, theme: theme)
-            ?? Color(hex: theme?.primary ?? "#007AFF")
+            ?? Color(hex: theme?.primary ?? PaywallTheme.defaultPrimary)
     }
 
     var body: some View {

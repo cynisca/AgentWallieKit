@@ -29,8 +29,8 @@ struct CarouselComponentView: View {
                     ForEach(0..<data.children.count, id: \.self) { index in
                         Circle()
                             .fill(index == currentPage
-                                ? Color(hex: theme?.primary ?? "#007AFF")
-                                : Color(hex: theme?.textSecondary ?? "#6B7280").opacity(0.4))
+                                ? Color(hex: theme?.primary ?? PaywallTheme.defaultPrimary)
+                                : Color(hex: theme?.textSecondary ?? PaywallTheme.defaultTextSecondary).opacity(0.4))
                             .frame(width: 8, height: 8)
                     }
                 }

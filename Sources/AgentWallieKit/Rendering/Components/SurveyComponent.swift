@@ -13,7 +13,7 @@ struct SurveyComponentView: View {
         VStack(alignment: .leading, spacing: 12) {
             Text(data.props.question)
                 .font(.headline)
-                .foregroundColor(resolveColor(data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? "#000000"))
+                .foregroundColor(resolveColor(data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? PaywallTheme.defaultTextPrimary))
 
             ForEach(Array(data.props.options.enumerated()), id: \.offset) { index, option in
                 Button(action: {
@@ -23,7 +23,7 @@ struct SurveyComponentView: View {
                         Text(option)
                             .foregroundColor(selectedOptions.contains(index)
                                 ? .white
-                                : (resolveColor(data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? "#000000")))
+                                : (resolveColor(data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? PaywallTheme.defaultTextPrimary)))
                         Spacer()
                         if selectedOptions.contains(index) {
                             Image(systemName: "checkmark")
@@ -35,12 +35,12 @@ struct SurveyComponentView: View {
                     .background(
                         RoundedRectangle(cornerRadius: 8)
                             .fill(selectedOptions.contains(index)
-                                ? (resolveColor(data.style?.color, theme: theme) ?? Color(hex: theme?.primary ?? "#007AFF"))
+                                ? (resolveColor(data.style?.color, theme: theme) ?? Color(hex: theme?.primary ?? PaywallTheme.defaultPrimary))
                                 : Color.clear)
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 8)
-                            .stroke(resolveColor(data.style?.borderColor, theme: theme) ?? Color(hex: theme?.textSecondary ?? "#6B7280").opacity(0.3), lineWidth: 1)
+                            .stroke(resolveColor(data.style?.borderColor, theme: theme) ?? Color(hex: theme?.textSecondary ?? PaywallTheme.defaultTextSecondary).opacity(0.3), lineWidth: 1)
                     )
                 }
                 .buttonStyle(.plain)

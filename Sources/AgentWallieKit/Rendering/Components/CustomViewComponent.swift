@@ -21,9 +21,17 @@ struct CustomViewComponentView: View {
     }
 
     private func resolveCustomView() -> AnyView? {
+        let customData: [String: AnyCodable] = (data.props.customData ?? [:]).mapValues { codableValue in
+            switch codableValue {
+            case .string(let s): return AnyCodable(s)
+            case .number(let n): return AnyCodable(n)
+            case .bool(let b): return AnyCodable(b)
+            }
+        }
+
         let context = CustomViewContext(
             viewName: data.props.viewName,
-            customData: [:],  // Will be populated when Sprint 1 adds customData to CustomViewProps
+            customData: customData,
             theme: theme,
             products: products,
             userAttributes: userAttributes
@@ -36,16 +44,16 @@ struct CustomViewComponentView: View {
         VStack(spacing: 4) {
             Image(systemName: "puzzlepiece.extension")
                 .font(.title2)
-                .foregroundColor(Color(hex: theme?.textSecondary ?? "#6B7280"))
+                .foregroundColor(Color(hex: theme?.textSecondary ?? PaywallTheme.defaultTextSecondary))
             Text(data.props.viewName)
                 .font(.caption)
-                .foregroundColor(Color(hex: theme?.textSecondary ?? "#6B7280"))
+                .foregroundColor(Color(hex: theme?.textSecondary ?? PaywallTheme.defaultTextSecondary))
         }
         .frame(maxWidth: .infinity)
         .padding()
         .background(
             RoundedRectangle(cornerRadius: 8)
-                .stroke(Color(hex: theme?.textSecondary ?? "#6B7280").opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [5]))
+                .stroke(Color(hex: theme?.textSecondary ?? PaywallTheme.defaultTextSecondary).opacity(0.3), style: StrokeStyle(lineWidth: 1, dash: [5]))
         )
     }
 }

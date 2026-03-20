@@ -11,11 +11,11 @@ struct FeatureListComponentView: View {
             ForEach(Array(data.props.items.enumerated()), id: \.offset) { _, item in
                 HStack(spacing: 12) {
                     Image(systemName: item.icon)
-                        .foregroundColor(resolveColor(data.props.iconColor, theme: theme) ?? Color(hex: theme?.accent ?? "#34C759"))
+                        .foregroundColor(resolveColor(data.props.iconColor, theme: theme) ?? Color(hex: theme?.accent ?? PaywallTheme.defaultAccent))
                         .font(.body)
                     Text(item.text)
                         .font(.body)
-                        .foregroundColor(resolveColor(data.style?.color ?? data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? "#000000"))
+                        .foregroundColor(resolveColor(data.style?.color ?? data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? PaywallTheme.defaultTextPrimary))
                 }
             }
         }

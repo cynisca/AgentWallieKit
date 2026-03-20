@@ -33,7 +33,7 @@ public struct PaywallView: View {
                 }
                 .padding(.horizontal, 16)
             }
-            .foregroundColor(Color(hex: schema.theme?.textPrimary ?? "#000000"))
+            .foregroundColor(Color(hex: schema.theme?.textPrimary ?? PaywallTheme.defaultTextPrimary))
             .applyIf(!schema.settings.safeAreaInsets) { view in
                 view.ignoresSafeArea()
             }
@@ -59,17 +59,17 @@ public struct PaywallView: View {
             return resolved
         }
         // Fall back to theme.background
-        return Color(hex: schema.theme?.background ?? "#FFFFFF")
+        return Color(hex: schema.theme?.background ?? PaywallTheme.defaultBackground)
     }
 
     private var closeButtonForeground: Color {
         // Use a contrasting color based on background
-        return Color(hex: schema.theme?.textPrimary ?? "#000000")
+        return Color(hex: schema.theme?.textPrimary ?? PaywallTheme.defaultTextPrimary)
     }
 
     private var closeButtonBackground: Color {
         // Semi-transparent overlay that works on both light and dark backgrounds
-        return Color(hex: schema.theme?.textPrimary ?? "#000000").opacity(0.15)
+        return Color(hex: schema.theme?.textPrimary ?? PaywallTheme.defaultTextPrimary).opacity(0.15)
     }
 
     @ViewBuilder

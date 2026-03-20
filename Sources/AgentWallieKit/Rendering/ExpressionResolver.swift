@@ -11,6 +11,8 @@ import Foundation
 /// - `theme.<key>` — theme property value (non-color, e.g. font_family)
 @available(iOS 16.0, *)
 public struct ExpressionResolver {
+    private static let templateRegex = try! NSRegularExpression(pattern: "\\{\\{\\s*([^}]+?)\\s*\\}\\}")
+
     public let products: [ProductSlot]?
     public let selectedProductIndex: Int
     public let theme: PaywallTheme?
@@ -35,13 +37,8 @@ public struct ExpressionResolver {
     public func resolve(_ text: String) -> String {
         guard !text.isEmpty else { return text }
 
-        let pattern = "\\{\\{\\s*([^}]+?)\\s*\\}\\}"
-        guard let regex = try? NSRegularExpression(pattern: pattern) else {
-            return text
-        }
-
         let nsText = text as NSString
-        let matches = regex.matches(in: text, range: NSRange(location: 0, length: nsText.length))
+        let matches = Self.templateRegex.matches(in: text, range: NSRange(location: 0, length: nsText.length))
 
         guard !matches.isEmpty else { return text }
 
@@ -119,17 +116,6 @@ public struct ExpressionResolver {
 
     private func resolveThemePath(parts: [String]) -> String? {
         guard let theme = theme, let key = parts.first else { return nil }
-        switch key {
-        case "primary": return theme.primary
-        case "secondary": return theme.secondary
-        case "background": return theme.background
-        case "text_primary": return theme.textPrimary
-        case "text_secondary": return theme.textSecondary
-        case "accent": return theme.accent
-        case "surface": return theme.surface
-        case "corner_radius": return "\(theme.cornerRadius)"
-        case "font_family": return theme.fontFamily
-        default: return nil
-        }
+        return theme.value(forKey: key)
     }
 }
