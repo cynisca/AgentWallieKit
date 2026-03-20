@@ -101,6 +101,9 @@ public struct ResolvedProductInfo: Sendable {
     /// Raw decimal price for calculations
     public var rawPrice: Decimal?
 
+    /// Raw decimal monthly price for savings calculations (avoids re-deriving)
+    public var rawMonthlyPrice: Decimal?
+
     public init(
         slot: String,
         label: String,
@@ -113,7 +116,8 @@ public struct ResolvedProductInfo: Sendable {
         trialPeriod: String? = nil,
         trialPrice: String? = nil,
         savingsPercentage: Int? = nil,
-        rawPrice: Decimal? = nil
+        rawPrice: Decimal? = nil,
+        rawMonthlyPrice: Decimal? = nil
     ) {
         self.slot = slot
         self.label = label
@@ -127,5 +131,6 @@ public struct ResolvedProductInfo: Sendable {
         self.trialPrice = trialPrice
         self.savingsPercentage = savingsPercentage
         self.rawPrice = rawPrice
+        self.rawMonthlyPrice = rawMonthlyPrice
     }
 }

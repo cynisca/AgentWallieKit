@@ -31,6 +31,18 @@ public struct ProductResolver {
         case freeTrial, payAsYouGo, payUpFront
     }
 
+    /// Reusable currency formatter (NumberFormatter is expensive to create).
+    private static let currencyFormatter: NumberFormatter = {
+        let formatter = NumberFormatter()
+        formatter.numberStyle = .currency
+        formatter.currencyCode = "USD"
+        formatter.maximumFractionDigits = 2
+        return formatter
+    }()
+
+    /// Approximate number of weeks per month, used for weekly-to-monthly conversion.
+    private static let weeksPerMonth = Decimal(string: "4.33")!
+
     /// Resolve an array of paywall product slots into display-ready product info.
     ///
     /// - Parameters:
@@ -53,8 +65,7 @@ public struct ProductResolver {
         if let monthly = monthlyPricePerMonth {
             for i in resolved.indices {
                 resolved[i].savingsPercentage = calculateSavings(
-                    pricePerMonth: resolved[i].pricePerMonth,
-                    rawPrice: resolved[i].rawPrice,
+                    rawMonthlyPrice: resolved[i].rawMonthlyPrice,
                     period: resolved[i].period,
                     monthlyPrice: monthly
                 )
@@ -98,7 +109,7 @@ public struct ProductResolver {
         let period = periodString(unit: periodUnit)
         let periodLabel = periodLabelString(unit: periodUnit)
 
-        let pricePerMonth = calculatePricePerMonth(
+        let monthlyResult = calculatePricePerMonth(
             price: storeProduct.price,
             periodUnit: periodUnit,
             periodValue: periodValue
@@ -112,12 +123,13 @@ public struct ProductResolver {
             productId: slot.productId,
             storeProductId: awProduct?.storeProductId,
             price: storeProduct.displayPrice,
-            pricePerMonth: pricePerMonth,
+            pricePerMonth: monthlyResult.formatted,
             period: period,
             periodLabel: periodLabel,
             trialPeriod: trialPeriod,
             trialPrice: trialPrice,
-            rawPrice: storeProduct.price
+            rawPrice: storeProduct.price,
+            rawMonthlyPrice: monthlyResult.raw
         )
     }
 
@@ -214,12 +226,12 @@ public struct ProductResolver {
 
     // MARK: - Price Calculations
 
-    /// Calculate the normalized monthly price.
+    /// Calculate the normalized monthly price, returning both formatted string and raw Decimal.
     public static func calculatePricePerMonth(
         price: Decimal,
         periodUnit: PeriodUnit,
         periodValue: Int
-    ) -> String? {
+    ) -> (formatted: String?, raw: Decimal) {
         let monthlyPrice: Decimal
         switch periodUnit {
         case .day:
@@ -227,7 +239,7 @@ public struct ProductResolver {
             monthlyPrice = (price / Decimal(periodValue)) * 30
         case .week:
             // Convert weekly to monthly (approximate: 4.33 weeks)
-            monthlyPrice = (price / Decimal(periodValue)) * Decimal(string: "4.33")!
+            monthlyPrice = (price / Decimal(periodValue)) * weeksPerMonth
         case .month:
             monthlyPrice = price / Decimal(periodValue)
         case .year:
@@ -235,38 +247,21 @@ public struct ProductResolver {
             monthlyPrice = price / (Decimal(periodValue) * 12)
         }
 
-        let formatter = NumberFormatter()
-        formatter.numberStyle = .currency
-        formatter.currencyCode = "USD"
-        formatter.maximumFractionDigits = 2
-        return formatter.string(from: monthlyPrice as NSDecimalNumber)
+        let formatted = currencyFormatter.string(from: monthlyPrice as NSDecimalNumber)
+        return (formatted, monthlyPrice)
     }
 
     /// Calculate savings percentage relative to the monthly price.
     /// Returns nil if the product IS the monthly product or if monthly price is unavailable.
     private static func calculateSavings(
-        pricePerMonth: String?,
-        rawPrice: Decimal?,
+        rawMonthlyPrice: Decimal?,
         period: String,
         monthlyPrice: Decimal
     ) -> Int? {
         guard period != "month" else { return nil }
-        guard let rawPrice = rawPrice else { return nil }
-
-        // We need to figure out the per-month cost for this product
-        let perMonth: Decimal
-        switch period {
-        case "year":
-            perMonth = rawPrice / 12
-        case "week":
-            perMonth = rawPrice * Decimal(string: "4.33")!
-        case "day":
-            perMonth = rawPrice * 30
-        default:
-            return nil
-        }
-
+        guard let perMonth = rawMonthlyPrice else { return nil }
         guard monthlyPrice > 0 else { return nil }
+
         var savings = ((monthlyPrice - perMonth) / monthlyPrice) * 100
         var rounded = Decimal()
         NSDecimalRound(&rounded, &savings, 0, .plain)

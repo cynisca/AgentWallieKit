@@ -23,16 +23,14 @@ public struct PaywallView: View {
         self.onDismiss = onDismiss
     }
 
-    private var expressionResolver: ExpressionResolver {
-        ExpressionResolver(
+    public var body: some View {
+        let expressionResolver = ExpressionResolver(
             products: schema.products,
             selectedProductIndex: selectedProductIndex,
             theme: schema.theme,
             resolvedProducts: resolvedProducts
         )
-    }
 
-    public var body: some View {
         ZStack(alignment: .topTrailing) {
             backgroundColor
                 .ignoresSafeArea()
@@ -40,7 +38,7 @@ public struct PaywallView: View {
             ScrollView(schema.settings.scrollEnabled ? .vertical : []) {
                 VStack(spacing: 0) {
                     ForEach(Array(schema.components.enumerated()), id: \.offset) { _, component in
-                        renderComponent(component)
+                        renderComponent(component, resolver: expressionResolver)
                     }
                 }
                 .padding(.horizontal, 16)
@@ -85,16 +83,16 @@ public struct PaywallView: View {
     }
 
     @ViewBuilder
-    private func renderComponent(_ component: PaywallComponent) -> some View {
+    private func renderComponent(_ component: PaywallComponent, resolver: ExpressionResolver) -> some View {
         switch component {
         case .text(let data):
-            TextComponentView(data: data, theme: schema.theme, resolver: expressionResolver)
+            TextComponentView(data: data, theme: schema.theme, resolver: resolver)
 
         case .image(let data):
             ImageComponentView(data: data, theme: schema.theme)
 
         case .ctaButton(let data):
-            CTAButtonComponentView(data: data, theme: schema.theme, onAction: handleAction, resolver: expressionResolver)
+            CTAButtonComponentView(data: data, theme: schema.theme, onAction: handleAction, resolver: resolver)
 
         case .productPicker(let data):
             ProductPickerComponentView(
@@ -122,7 +120,7 @@ public struct PaywallView: View {
                 data: data,
                 theme: schema.theme,
                 onAction: handleAction,
-                renderComponent: { child in AnyView(renderComponent(child)) }
+                renderComponent: { child in AnyView(renderComponent(child, resolver: resolver)) }
             )
 
         case .countdownTimer(let data):
@@ -136,7 +134,7 @@ public struct PaywallView: View {
                 data: data,
                 theme: schema.theme,
                 onAction: handleAction,
-                renderComponent: { child in AnyView(renderComponent(child)) }
+                renderComponent: { child in AnyView(renderComponent(child, resolver: resolver)) }
             )
 
         case .carousel(let data):
@@ -144,7 +142,7 @@ public struct PaywallView: View {
                 data: data,
                 theme: schema.theme,
                 onAction: handleAction,
-                renderComponent: { child in AnyView(renderComponent(child)) }
+                renderComponent: { child in AnyView(renderComponent(child, resolver: resolver)) }
             )
 
         case .slides(let data):
@@ -152,7 +150,7 @@ public struct PaywallView: View {
                 data: data,
                 theme: schema.theme,
                 onAction: handleAction,
-                renderComponent: { child in AnyView(renderComponent(child)) }
+                renderComponent: { child in AnyView(renderComponent(child, resolver: resolver)) }
             )
 
         case .toggle(let data):

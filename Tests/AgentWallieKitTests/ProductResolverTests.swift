@@ -210,9 +210,9 @@ final class ProductResolverTests: XCTestCase {
             periodUnit: .year,
             periodValue: 1
         )
-        XCTAssertNotNil(result)
+        XCTAssertNotNil(result.formatted)
         // $59.99 / 12 = $4.999... ≈ $5.00
-        XCTAssertTrue(result!.contains("5.00") || result!.contains("4.99"), "Expected ~$5.00, got \(result!)")
+        XCTAssertTrue(result.formatted!.contains("5.00") || result.formatted!.contains("4.99"), "Expected ~$5.00, got \(result.formatted!)")
     }
 
     func testPricePerMonthNormalization_Monthly() {
@@ -221,8 +221,8 @@ final class ProductResolverTests: XCTestCase {
             periodUnit: .month,
             periodValue: 1
         )
-        XCTAssertNotNil(result)
-        XCTAssertTrue(result!.contains("9.99"), "Expected $9.99, got \(result!)")
+        XCTAssertNotNil(result.formatted)
+        XCTAssertTrue(result.formatted!.contains("9.99"), "Expected $9.99, got \(result.formatted!)")
     }
 
     func testPricePerMonthNormalization_Weekly() {
@@ -231,9 +231,9 @@ final class ProductResolverTests: XCTestCase {
             periodUnit: .week,
             periodValue: 1
         )
-        XCTAssertNotNil(result)
+        XCTAssertNotNil(result.formatted)
         // $2.99 * 4.33 ≈ $12.95
-        XCTAssertTrue(result!.contains("12.9"), "Expected ~$12.95, got \(result!)")
+        XCTAssertTrue(result.formatted!.contains("12.9"), "Expected ~$12.95, got \(result.formatted!)")
     }
 
     // MARK: - Trial Period String Formatting
