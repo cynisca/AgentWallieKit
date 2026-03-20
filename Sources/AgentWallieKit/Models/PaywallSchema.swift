@@ -251,6 +251,13 @@ public enum PaywallComponent: Codable, Sendable {
     case divider(DividerComponentData)
     case stack(StackComponentData)
     case countdownTimer(CountdownTimerComponentData)
+    case video(VideoComponentData)
+    case drawer(DrawerComponentData)
+    case carousel(CarouselComponentData)
+    case slides(SlidesComponentData)
+    case toggle(ToggleComponentData)
+    case survey(SurveyComponentData)
+    case customView(CustomViewComponentData)
     case unknown(String)
 
     enum CodingKeys: String, CodingKey {
@@ -283,6 +290,20 @@ public enum PaywallComponent: Codable, Sendable {
             self = .stack(try singleContainer.decode(StackComponentData.self))
         case "countdown_timer":
             self = .countdownTimer(try singleContainer.decode(CountdownTimerComponentData.self))
+        case "video":
+            self = .video(try singleContainer.decode(VideoComponentData.self))
+        case "drawer":
+            self = .drawer(try singleContainer.decode(DrawerComponentData.self))
+        case "carousel":
+            self = .carousel(try singleContainer.decode(CarouselComponentData.self))
+        case "slides":
+            self = .slides(try singleContainer.decode(SlidesComponentData.self))
+        case "toggle":
+            self = .toggle(try singleContainer.decode(ToggleComponentData.self))
+        case "survey":
+            self = .survey(try singleContainer.decode(SurveyComponentData.self))
+        case "custom_view":
+            self = .customView(try singleContainer.decode(CustomViewComponentData.self))
         default:
             self = .unknown(type)
         }
@@ -300,6 +321,13 @@ public enum PaywallComponent: Codable, Sendable {
         case .divider(let data): try data.encode(to: encoder)
         case .stack(let data): try data.encode(to: encoder)
         case .countdownTimer(let data): try data.encode(to: encoder)
+        case .video(let data): try data.encode(to: encoder)
+        case .drawer(let data): try data.encode(to: encoder)
+        case .carousel(let data): try data.encode(to: encoder)
+        case .slides(let data): try data.encode(to: encoder)
+        case .toggle(let data): try data.encode(to: encoder)
+        case .survey(let data): try data.encode(to: encoder)
+        case .customView(let data): try data.encode(to: encoder)
         case .unknown(_): break
         }
     }
@@ -632,6 +660,218 @@ public struct CountdownTimerComponentData: Codable, Sendable {
         enum CodingKeys: String, CodingKey {
             case durationSeconds = "duration_seconds"
             case label
+        }
+    }
+}
+
+// MARK: - Video Component
+
+public struct VideoComponentData: Codable, Sendable {
+    public let type: String
+    public let id: String
+    public let props: VideoProps
+    public let style: ComponentStyle?
+
+    public init(id: String, props: VideoProps, style: ComponentStyle? = nil) {
+        self.type = "video"
+        self.id = id
+        self.props = props
+        self.style = style
+    }
+
+    public struct VideoProps: Codable, Sendable {
+        public let src: String
+        public let autoplay: Bool
+        public let loop: Bool
+        public let muted: Bool
+        public let poster: String?
+
+        public init(src: String, autoplay: Bool = false, loop: Bool = false, muted: Bool = false, poster: String? = nil) {
+            self.src = src
+            self.autoplay = autoplay
+            self.loop = loop
+            self.muted = muted
+            self.poster = poster
+        }
+    }
+}
+
+// MARK: - Drawer Component
+
+public struct DrawerComponentData: Codable, Sendable {
+    public let type: String
+    public let id: String
+    public let props: DrawerProps
+    public let children: [PaywallComponent]
+    public let style: ComponentStyle?
+
+    public init(id: String, props: DrawerProps, children: [PaywallComponent], style: ComponentStyle? = nil) {
+        self.type = "drawer"
+        self.id = id
+        self.props = props
+        self.children = children
+        self.style = style
+    }
+
+    public struct DrawerProps: Codable, Sendable {
+        public let title: String
+        public let expanded: Bool
+
+        public init(title: String, expanded: Bool = true) {
+            self.title = title
+            self.expanded = expanded
+        }
+    }
+}
+
+// MARK: - Carousel Component
+
+public struct CarouselComponentData: Codable, Sendable {
+    public let type: String
+    public let id: String
+    public let props: CarouselProps
+    public let children: [PaywallComponent]
+    public let style: ComponentStyle?
+
+    public init(id: String, props: CarouselProps, children: [PaywallComponent], style: ComponentStyle? = nil) {
+        self.type = "carousel"
+        self.id = id
+        self.props = props
+        self.children = children
+        self.style = style
+    }
+
+    public struct CarouselProps: Codable, Sendable {
+        public let autoScroll: Bool
+        public let intervalMs: Int
+
+        public init(autoScroll: Bool = false, intervalMs: Int = 3000) {
+            self.autoScroll = autoScroll
+            self.intervalMs = intervalMs
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case autoScroll = "auto_scroll"
+            case intervalMs = "interval_ms"
+        }
+    }
+}
+
+// MARK: - Slides Component
+
+public struct SlidesComponentData: Codable, Sendable {
+    public let type: String
+    public let id: String
+    public let props: SlidesProps
+    public let style: ComponentStyle?
+
+    public init(id: String, props: SlidesProps, style: ComponentStyle? = nil) {
+        self.type = "slides"
+        self.id = id
+        self.props = props
+        self.style = style
+    }
+
+    public struct SlidesProps: Codable, Sendable {
+        public let pages: [[PaywallComponent]]
+
+        public init(pages: [[PaywallComponent]]) {
+            self.pages = pages
+        }
+    }
+}
+
+// MARK: - Toggle Component
+
+public struct ToggleComponentData: Codable, Sendable {
+    public let type: String
+    public let id: String
+    public let props: ToggleProps
+    public let style: ComponentStyle?
+
+    public init(id: String, props: ToggleProps, style: ComponentStyle? = nil) {
+        self.type = "toggle"
+        self.id = id
+        self.props = props
+        self.style = style
+    }
+
+    public struct ToggleProps: Codable, Sendable {
+        public let label: String
+        public let defaultValue: Bool
+        public let linkedProduct: String?
+
+        public init(label: String, defaultValue: Bool = false, linkedProduct: String? = nil) {
+            self.label = label
+            self.defaultValue = defaultValue
+            self.linkedProduct = linkedProduct
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case label
+            case defaultValue = "default_value"
+            case linkedProduct = "linked_product"
+        }
+    }
+}
+
+// MARK: - Survey Component
+
+public struct SurveyComponentData: Codable, Sendable {
+    public let type: String
+    public let id: String
+    public let props: SurveyProps
+    public let style: ComponentStyle?
+
+    public init(id: String, props: SurveyProps, style: ComponentStyle? = nil) {
+        self.type = "survey"
+        self.id = id
+        self.props = props
+        self.style = style
+    }
+
+    public struct SurveyProps: Codable, Sendable {
+        public let question: String
+        public let options: [String]
+        public let allowMultiple: Bool
+
+        public init(question: String, options: [String], allowMultiple: Bool = false) {
+            self.question = question
+            self.options = options
+            self.allowMultiple = allowMultiple
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case question, options
+            case allowMultiple = "allow_multiple"
+        }
+    }
+}
+
+// MARK: - Custom View Component
+
+public struct CustomViewComponentData: Codable, Sendable {
+    public let type: String
+    public let id: String
+    public let props: CustomViewProps
+    public let style: ComponentStyle?
+
+    public init(id: String, props: CustomViewProps, style: ComponentStyle? = nil) {
+        self.type = "custom_view"
+        self.id = id
+        self.props = props
+        self.style = style
+    }
+
+    public struct CustomViewProps: Codable, Sendable {
+        public let viewName: String
+
+        public init(viewName: String) {
+            self.viewName = viewName
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case viewName = "view_name"
         }
     }
 }

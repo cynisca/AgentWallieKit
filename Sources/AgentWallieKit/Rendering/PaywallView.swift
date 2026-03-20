@@ -93,6 +93,42 @@ public struct PaywallView: View {
         case .countdownTimer(let data):
             CountdownTimerComponentView(data: data, theme: schema.theme)
 
+        case .video(let data):
+            VideoComponentView(data: data, theme: schema.theme)
+
+        case .drawer(let data):
+            DrawerComponentView(
+                data: data,
+                theme: schema.theme,
+                onAction: handleAction,
+                renderComponent: { child in AnyView(renderComponent(child)) }
+            )
+
+        case .carousel(let data):
+            CarouselComponentView(
+                data: data,
+                theme: schema.theme,
+                onAction: handleAction,
+                renderComponent: { child in AnyView(renderComponent(child)) }
+            )
+
+        case .slides(let data):
+            SlidesComponentView(
+                data: data,
+                theme: schema.theme,
+                onAction: handleAction,
+                renderComponent: { child in AnyView(renderComponent(child)) }
+            )
+
+        case .toggle(let data):
+            ToggleComponentView(data: data, theme: schema.theme, onAction: handleAction)
+
+        case .survey(let data):
+            SurveyComponentView(data: data, theme: schema.theme, onAction: handleAction)
+
+        case .customView(let data):
+            CustomViewComponentView(data: data, theme: schema.theme)
+
         case .unknown:
             EmptyView()
         }
