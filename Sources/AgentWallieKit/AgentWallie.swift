@@ -411,6 +411,40 @@ public final class AgentWallie: @unchecked Sendable {
         print("[AgentWallie] [\(level)] \(message)")
         #endif
     }
+
+    // MARK: - Custom View Registration
+
+    /// Register a custom SwiftUI view that can be referenced in paywall schemas.
+    ///
+    /// Usage:
+    /// ```swift
+    /// AgentWallie.shared.registerView(name: "MyHero") {
+    ///     MyHeroView()
+    /// }
+    /// ```
+    public func registerView<V: View>(name: String, @ViewBuilder builder: @escaping @Sendable () -> V) {
+        CustomViewRegistry.shared.register(name: name, builder: builder)
+    }
+
+    /// Register a custom view that receives paywall context (theme, products, custom data).
+    ///
+    /// Usage:
+    /// ```swift
+    /// AgentWallie.shared.registerView(name: "PricingCard") { context in
+    ///     PricingCardView(
+    ///         title: context.customData["title"]?.value as? String ?? "",
+    ///         theme: context.theme
+    ///     )
+    /// }
+    /// ```
+    public func registerView<V: View>(name: String, builder: @escaping @Sendable (CustomViewContext) -> V) {
+        CustomViewRegistry.shared.register(name: name, builder: builder)
+    }
+
+    /// Check if a custom view is registered.
+    public func isViewRegistered(name: String) -> Bool {
+        CustomViewRegistry.shared.isRegistered(name: name)
+    }
 }
 
 // MARK: - Errors

@@ -140,6 +140,52 @@ public struct PaywallTheme: Codable, Sendable {
     }
 }
 
+// MARK: - Component Condition
+
+public struct ComponentCondition: Codable, Sendable {
+    public let field: String
+    public let `operator`: String
+    public let value: CodableValue?
+
+    public init(field: String, operator: String, value: CodableValue? = nil) {
+        self.field = field
+        self.operator = `operator`
+        self.value = value
+    }
+}
+
+// MARK: - Component Animation
+
+public struct ComponentAnimation: Codable, Sendable {
+    public let type: String
+    public let durationMs: Int?
+    public let delayMs: Int?
+
+    public init(type: String, durationMs: Int? = nil, delayMs: Int? = nil) {
+        self.type = type
+        self.durationMs = durationMs
+        self.delayMs = delayMs
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case type
+        case durationMs = "duration_ms"
+        case delayMs = "delay_ms"
+    }
+}
+
+// MARK: - Background Gradient
+
+public struct BackgroundGradient: Codable, Sendable {
+    public let colors: [String]
+    public let direction: String?
+
+    public init(colors: [String], direction: String? = nil) {
+        self.colors = colors
+        self.direction = direction
+    }
+}
+
 // MARK: - Component Style
 
 public struct ComponentStyle: Codable, Sendable {
@@ -165,6 +211,7 @@ public struct ComponentStyle: Codable, Sendable {
     public var opacity: Double?
     public var borderWidth: Double?
     public var borderColor: String?
+    public var backgroundGradient: BackgroundGradient?
 
     public init() {}
 
@@ -189,22 +236,27 @@ public struct ComponentStyle: Codable, Sendable {
         case alignment
         case borderWidth = "border_width"
         case borderColor = "border_color"
+        case backgroundGradient = "background_gradient"
     }
 }
 
 /// A value that can be either a string or a number.
-public enum CodableValue: Codable, Sendable {
+public enum CodableValue: Codable, Sendable, Equatable {
     case string(String)
     case number(Double)
+    case bool(Bool)
 
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        if let num = try? container.decode(Double.self) {
+        // Try bool before number since JSON bools can decode as numbers
+        if let b = try? container.decode(Bool.self) {
+            self = .bool(b)
+        } else if let num = try? container.decode(Double.self) {
             self = .number(num)
         } else if let str = try? container.decode(String.self) {
             self = .string(str)
         } else {
-            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Expected string or number")
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Expected string, number, or boolean")
         }
     }
 
@@ -213,6 +265,7 @@ public enum CodableValue: Codable, Sendable {
         switch self {
         case .string(let s): try container.encode(s)
         case .number(let n): try container.encode(n)
+        case .bool(let b): try container.encode(b)
         }
     }
 
@@ -220,6 +273,7 @@ public enum CodableValue: Codable, Sendable {
         switch self {
         case .number(let n): return n
         case .string(_): return nil
+        case .bool(_): return nil
         }
     }
 }
@@ -258,6 +312,8 @@ public enum PaywallComponent: Codable, Sendable {
     case toggle(ToggleComponentData)
     case survey(SurveyComponentData)
     case customView(CustomViewComponentData)
+    case badge(BadgeComponentData)
+    case rating(RatingComponentData)
     case unknown(String)
 
     enum CodingKeys: String, CodingKey {
@@ -304,6 +360,10 @@ public enum PaywallComponent: Codable, Sendable {
             self = .survey(try singleContainer.decode(SurveyComponentData.self))
         case "custom_view":
             self = .customView(try singleContainer.decode(CustomViewComponentData.self))
+        case "badge":
+            self = .badge(try singleContainer.decode(BadgeComponentData.self))
+        case "rating":
+            self = .rating(try singleContainer.decode(RatingComponentData.self))
         default:
             self = .unknown(type)
         }
@@ -328,6 +388,8 @@ public enum PaywallComponent: Codable, Sendable {
         case .toggle(let data): try data.encode(to: encoder)
         case .survey(let data): try data.encode(to: encoder)
         case .customView(let data): try data.encode(to: encoder)
+        case .badge(let data): try data.encode(to: encoder)
+        case .rating(let data): try data.encode(to: encoder)
         case .unknown(_): break
         }
     }
@@ -340,12 +402,16 @@ public struct TextComponentData: Codable, Sendable {
     public let id: String
     public let props: TextProps
     public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
 
-    public init(id: String, props: TextProps, style: ComponentStyle? = nil) {
+    public init(id: String, props: TextProps, style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "text"
         self.id = id
         self.props = props
         self.style = style
+        self.condition = condition
+        self.animation = animation
     }
 
     public struct TextProps: Codable, Sendable {
@@ -372,12 +438,16 @@ public struct ImageComponentData: Codable, Sendable {
     public let id: String
     public let props: ImageProps
     public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
 
-    public init(id: String, props: ImageProps, style: ComponentStyle? = nil) {
+    public init(id: String, props: ImageProps, style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "image"
         self.id = id
         self.props = props
         self.style = style
+        self.condition = condition
+        self.animation = animation
     }
 
     public struct ImageProps: Codable, Sendable {
@@ -405,12 +475,16 @@ public struct CTAButtonComponentData: Codable, Sendable {
     public let id: String
     public let props: CTAButtonProps
     public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
 
-    public init(id: String, props: CTAButtonProps, style: ComponentStyle? = nil) {
+    public init(id: String, props: CTAButtonProps, style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "cta_button"
         self.id = id
         self.props = props
         self.style = style
+        self.condition = condition
+        self.animation = animation
     }
 
     public struct CTAButtonProps: Codable, Sendable {
@@ -453,12 +527,16 @@ public struct ProductPickerComponentData: Codable, Sendable {
     public let id: String
     public let props: ProductPickerProps
     public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
 
-    public init(id: String, props: ProductPickerProps, style: ComponentStyle? = nil) {
+    public init(id: String, props: ProductPickerProps, style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "product_picker"
         self.id = id
         self.props = props
         self.style = style
+        self.condition = condition
+        self.animation = animation
     }
 
     public struct ProductPickerProps: Codable, Sendable {
@@ -493,12 +571,16 @@ public struct FeatureListComponentData: Codable, Sendable {
     public let id: String
     public let props: FeatureListProps
     public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
 
-    public init(id: String, props: FeatureListProps, style: ComponentStyle? = nil) {
+    public init(id: String, props: FeatureListProps, style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "feature_list"
         self.id = id
         self.props = props
         self.style = style
+        self.condition = condition
+        self.animation = animation
     }
 
     public struct FeatureListProps: Codable, Sendable {
@@ -532,12 +614,16 @@ public struct LinkRowComponentData: Codable, Sendable {
     public let id: String
     public let props: LinkRowProps
     public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
 
-    public init(id: String, props: LinkRowProps, style: ComponentStyle? = nil) {
+    public init(id: String, props: LinkRowProps, style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "link_row"
         self.id = id
         self.props = props
         self.style = style
+        self.condition = condition
+        self.animation = animation
     }
 
     public struct LinkRowProps: Codable, Sendable {
@@ -569,11 +655,15 @@ public struct SpacerComponentData: Codable, Sendable {
     public let type: String
     public let id: String
     public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
 
-    public init(id: String, style: ComponentStyle? = nil) {
+    public init(id: String, style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "spacer"
         self.id = id
         self.style = style
+        self.condition = condition
+        self.animation = animation
     }
 }
 
@@ -584,12 +674,16 @@ public struct DividerComponentData: Codable, Sendable {
     public let id: String
     public let props: DividerProps?
     public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
 
-    public init(id: String, props: DividerProps? = nil, style: ComponentStyle? = nil) {
+    public init(id: String, props: DividerProps? = nil, style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "divider"
         self.id = id
         self.props = props
         self.style = style
+        self.condition = condition
+        self.animation = animation
     }
 
     public struct DividerProps: Codable, Sendable {
@@ -611,13 +705,17 @@ public struct StackComponentData: Codable, Sendable {
     public let props: StackProps
     public let children: [PaywallComponent]
     public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
 
-    public init(id: String, props: StackProps, children: [PaywallComponent], style: ComponentStyle? = nil) {
+    public init(id: String, props: StackProps, children: [PaywallComponent], style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "stack"
         self.id = id
         self.props = props
         self.children = children
         self.style = style
+        self.condition = condition
+        self.animation = animation
     }
 
     public struct StackProps: Codable, Sendable {
@@ -640,12 +738,16 @@ public struct CountdownTimerComponentData: Codable, Sendable {
     public let id: String
     public let props: CountdownTimerProps
     public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
 
-    public init(id: String, props: CountdownTimerProps, style: ComponentStyle? = nil) {
+    public init(id: String, props: CountdownTimerProps, style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "countdown_timer"
         self.id = id
         self.props = props
         self.style = style
+        self.condition = condition
+        self.animation = animation
     }
 
     public struct CountdownTimerProps: Codable, Sendable {
@@ -671,12 +773,16 @@ public struct VideoComponentData: Codable, Sendable {
     public let id: String
     public let props: VideoProps
     public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
 
-    public init(id: String, props: VideoProps, style: ComponentStyle? = nil) {
+    public init(id: String, props: VideoProps, style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "video"
         self.id = id
         self.props = props
         self.style = style
+        self.condition = condition
+        self.animation = animation
     }
 
     public struct VideoProps: Codable, Sendable {
@@ -704,13 +810,17 @@ public struct DrawerComponentData: Codable, Sendable {
     public let props: DrawerProps
     public let children: [PaywallComponent]
     public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
 
-    public init(id: String, props: DrawerProps, children: [PaywallComponent], style: ComponentStyle? = nil) {
+    public init(id: String, props: DrawerProps, children: [PaywallComponent], style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "drawer"
         self.id = id
         self.props = props
         self.children = children
         self.style = style
+        self.condition = condition
+        self.animation = animation
     }
 
     public struct DrawerProps: Codable, Sendable {
@@ -732,13 +842,17 @@ public struct CarouselComponentData: Codable, Sendable {
     public let props: CarouselProps
     public let children: [PaywallComponent]
     public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
 
-    public init(id: String, props: CarouselProps, children: [PaywallComponent], style: ComponentStyle? = nil) {
+    public init(id: String, props: CarouselProps, children: [PaywallComponent], style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "carousel"
         self.id = id
         self.props = props
         self.children = children
         self.style = style
+        self.condition = condition
+        self.animation = animation
     }
 
     public struct CarouselProps: Codable, Sendable {
@@ -764,12 +878,16 @@ public struct SlidesComponentData: Codable, Sendable {
     public let id: String
     public let props: SlidesProps
     public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
 
-    public init(id: String, props: SlidesProps, style: ComponentStyle? = nil) {
+    public init(id: String, props: SlidesProps, style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "slides"
         self.id = id
         self.props = props
         self.style = style
+        self.condition = condition
+        self.animation = animation
     }
 
     public struct SlidesProps: Codable, Sendable {
@@ -788,12 +906,16 @@ public struct ToggleComponentData: Codable, Sendable {
     public let id: String
     public let props: ToggleProps
     public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
 
-    public init(id: String, props: ToggleProps, style: ComponentStyle? = nil) {
+    public init(id: String, props: ToggleProps, style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "toggle"
         self.id = id
         self.props = props
         self.style = style
+        self.condition = condition
+        self.animation = animation
     }
 
     public struct ToggleProps: Codable, Sendable {
@@ -822,12 +944,16 @@ public struct SurveyComponentData: Codable, Sendable {
     public let id: String
     public let props: SurveyProps
     public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
 
-    public init(id: String, props: SurveyProps, style: ComponentStyle? = nil) {
+    public init(id: String, props: SurveyProps, style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "survey"
         self.id = id
         self.props = props
         self.style = style
+        self.condition = condition
+        self.animation = animation
     }
 
     public struct SurveyProps: Codable, Sendable {
@@ -855,23 +981,99 @@ public struct CustomViewComponentData: Codable, Sendable {
     public let id: String
     public let props: CustomViewProps
     public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
 
-    public init(id: String, props: CustomViewProps, style: ComponentStyle? = nil) {
+    public init(id: String, props: CustomViewProps, style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "custom_view"
         self.id = id
         self.props = props
         self.style = style
+        self.condition = condition
+        self.animation = animation
     }
 
     public struct CustomViewProps: Codable, Sendable {
         public let viewName: String
+        public let customData: [String: CodableValue]?
 
-        public init(viewName: String) {
+        public init(viewName: String, customData: [String: CodableValue]? = nil) {
             self.viewName = viewName
+            self.customData = customData
         }
 
         enum CodingKeys: String, CodingKey {
             case viewName = "view_name"
+            case customData = "custom_data"
+        }
+    }
+}
+
+// MARK: - Badge Component
+
+public struct BadgeComponentData: Codable, Sendable {
+    public let type: String
+    public let id: String
+    public let props: BadgeProps
+    public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
+
+    public init(id: String, props: BadgeProps, style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
+        self.type = "badge"
+        self.id = id
+        self.props = props
+        self.style = style
+        self.condition = condition
+        self.animation = animation
+    }
+
+    public struct BadgeProps: Codable, Sendable {
+        public let text: String
+        public let variant: String?
+
+        public init(text: String, variant: String? = nil) {
+            self.text = text
+            self.variant = variant
+        }
+    }
+}
+
+// MARK: - Rating Component
+
+public struct RatingComponentData: Codable, Sendable {
+    public let type: String
+    public let id: String
+    public let props: RatingProps
+    public let style: ComponentStyle?
+    public let condition: ComponentCondition?
+    public let animation: ComponentAnimation?
+
+    public init(id: String, props: RatingProps, style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
+        self.type = "rating"
+        self.id = id
+        self.props = props
+        self.style = style
+        self.condition = condition
+        self.animation = animation
+    }
+
+    public struct RatingProps: Codable, Sendable {
+        public let value: Double
+        public let count: Int?
+        public let label: String?
+        public let maxStars: Int?
+
+        public init(value: Double, count: Int? = nil, label: String? = nil, maxStars: Int? = nil) {
+            self.value = value
+            self.count = count
+            self.label = label
+            self.maxStars = maxStars
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case value, count, label
+            case maxStars = "max_stars"
         }
     }
 }

@@ -136,6 +136,7 @@ struct StyleModifier: ViewModifier {
         switch w {
         case .number(let n): return CGFloat(n)
         case .string(_): return nil
+        case .bool(_): return nil
         }
     }
 }
