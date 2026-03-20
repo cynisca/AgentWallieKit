@@ -44,7 +44,7 @@ public struct PaywallView: View {
                         .font(.system(size: 14, weight: .bold))
                         .foregroundColor(closeButtonForeground)
                         .frame(width: 30, height: 30)
-                        .background(Color.black.opacity(0.15))
+                        .background(closeButtonBackground)
                         .clipShape(Circle())
                         .padding(16)
                 }
@@ -54,20 +54,22 @@ public struct PaywallView: View {
 
     private var backgroundColor: Color {
         let bgStr = schema.settings.backgroundColor
-        // If settings has an explicit non-white background, use it
-        if let resolved = resolveColor(bgStr, theme: schema.theme), bgStr != "#FFFFFF" {
+        // Try to resolve the background color (handles both hex and theme refs)
+        if let resolved = resolveColor(bgStr, theme: schema.theme) {
             return resolved
         }
-        // Otherwise fall back to theme.background
+        // Fall back to theme.background
         return Color(hex: schema.theme?.background ?? "#FFFFFF")
     }
 
     private var closeButtonForeground: Color {
         // Use a contrasting color based on background
-        if let theme = schema.theme {
-            return Color(hex: theme.textPrimary)
-        }
-        return .secondary
+        return Color(hex: schema.theme?.textPrimary ?? "#000000")
+    }
+
+    private var closeButtonBackground: Color {
+        // Semi-transparent overlay that works on both light and dark backgrounds
+        return Color(hex: schema.theme?.textPrimary ?? "#000000").opacity(0.15)
     }
 
     @ViewBuilder

@@ -59,11 +59,11 @@ struct VideoComponentView: View {
     private var videoPlaceholder: some View {
         ZStack {
             Rectangle()
-                .fill(Color.black.opacity(0.1))
+                .fill(Color(hex: theme?.surface ?? "#F2F2F7"))
                 .aspectRatio(16.0 / 9.0, contentMode: .fit)
             Image(systemName: "play.circle.fill")
                 .font(.system(size: 48))
-                .foregroundColor(.secondary)
+                .foregroundColor(Color(hex: theme?.textSecondary ?? "#6B7280"))
         }
     }
 

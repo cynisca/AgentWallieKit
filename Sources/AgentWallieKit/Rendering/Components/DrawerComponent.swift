@@ -33,10 +33,10 @@ struct DrawerComponentView: View {
                 HStack {
                     Text(data.props.title)
                         .font(.headline)
-                        .foregroundColor(resolveColor(data.style?.textColor, theme: theme) ?? .primary)
+                        .foregroundColor(resolveColor(data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? "#000000"))
                     Spacer()
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")
-                        .foregroundColor(.secondary)
+                        .foregroundColor(Color(hex: theme?.textSecondary ?? "#6B7280"))
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
