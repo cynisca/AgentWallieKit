@@ -224,6 +224,10 @@ public enum PaywallComponent: Codable, Sendable {
     case productPicker(ProductPickerComponentData)
     case featureList(FeatureListComponentData)
     case linkRow(LinkRowComponentData)
+    case spacer(SpacerComponentData)
+    case divider(DividerComponentData)
+    case stack(StackComponentData)
+    case countdownTimer(CountdownTimerComponentData)
     case unknown(String)
 
     enum CodingKeys: String, CodingKey {
@@ -248,6 +252,14 @@ public enum PaywallComponent: Codable, Sendable {
             self = .featureList(try singleContainer.decode(FeatureListComponentData.self))
         case "link_row":
             self = .linkRow(try singleContainer.decode(LinkRowComponentData.self))
+        case "spacer":
+            self = .spacer(try singleContainer.decode(SpacerComponentData.self))
+        case "divider":
+            self = .divider(try singleContainer.decode(DividerComponentData.self))
+        case "stack":
+            self = .stack(try singleContainer.decode(StackComponentData.self))
+        case "countdown_timer":
+            self = .countdownTimer(try singleContainer.decode(CountdownTimerComponentData.self))
         default:
             self = .unknown(type)
         }
@@ -261,6 +273,10 @@ public enum PaywallComponent: Codable, Sendable {
         case .productPicker(let data): try data.encode(to: encoder)
         case .featureList(let data): try data.encode(to: encoder)
         case .linkRow(let data): try data.encode(to: encoder)
+        case .spacer(let data): try data.encode(to: encoder)
+        case .divider(let data): try data.encode(to: encoder)
+        case .stack(let data): try data.encode(to: encoder)
+        case .countdownTimer(let data): try data.encode(to: encoder)
         case .unknown(_): break
         }
     }
@@ -492,6 +508,107 @@ public struct LinkRowComponentData: Codable, Sendable {
             self.text = text
             self.action = action
             self.url = url
+        }
+    }
+}
+
+// MARK: - Spacer Component
+
+public struct SpacerComponentData: Codable, Sendable {
+    public let type: String
+    public let id: String
+    public let style: ComponentStyle?
+
+    public init(id: String, style: ComponentStyle? = nil) {
+        self.type = "spacer"
+        self.id = id
+        self.style = style
+    }
+}
+
+// MARK: - Divider Component
+
+public struct DividerComponentData: Codable, Sendable {
+    public let type: String
+    public let id: String
+    public let props: DividerProps?
+    public let style: ComponentStyle?
+
+    public init(id: String, props: DividerProps? = nil, style: ComponentStyle? = nil) {
+        self.type = "divider"
+        self.id = id
+        self.props = props
+        self.style = style
+    }
+
+    public struct DividerProps: Codable, Sendable {
+        public let color: String?
+        public let thickness: Double?
+
+        public init(color: String? = nil, thickness: Double? = nil) {
+            self.color = color
+            self.thickness = thickness
+        }
+    }
+}
+
+// MARK: - Stack Component
+
+public struct StackComponentData: Codable, Sendable {
+    public let type: String
+    public let id: String
+    public let props: StackProps
+    public let children: [PaywallComponent]
+    public let style: ComponentStyle?
+
+    public init(id: String, props: StackProps, children: [PaywallComponent], style: ComponentStyle? = nil) {
+        self.type = "stack"
+        self.id = id
+        self.props = props
+        self.children = children
+        self.style = style
+    }
+
+    public struct StackProps: Codable, Sendable {
+        public let direction: String
+        public let spacing: Double?
+        public let alignment: String?
+
+        public init(direction: String = "vertical", spacing: Double? = nil, alignment: String? = nil) {
+            self.direction = direction
+            self.spacing = spacing
+            self.alignment = alignment
+        }
+    }
+}
+
+// MARK: - Countdown Timer Component
+
+public struct CountdownTimerComponentData: Codable, Sendable {
+    public let type: String
+    public let id: String
+    public let props: CountdownTimerProps
+    public let style: ComponentStyle?
+
+    public init(id: String, props: CountdownTimerProps, style: ComponentStyle? = nil) {
+        self.type = "countdown_timer"
+        self.id = id
+        self.props = props
+        self.style = style
+    }
+
+    public struct CountdownTimerProps: Codable, Sendable {
+        public let durationSeconds: Int
+        public let label: String?
+
+        public init(durationSeconds: Int, label: String? = nil) {
+            self.durationSeconds = durationSeconds
+            self.label = label
+        }
+
+        enum CodingKeys: String, CodingKey {
+            case durationSeconds = "duration_seconds"
+            case label
         }
     }
 }

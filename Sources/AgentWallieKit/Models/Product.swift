@@ -55,9 +55,16 @@ public struct AWProduct: Codable, Sendable {
 public struct ProductSlot: Codable, Sendable {
     public let slot: String
     public let label: String
+    public let productId: String?
 
-    public init(slot: String, label: String) {
+    public init(slot: String, label: String, productId: String? = nil) {
         self.slot = slot
         self.label = label
+        self.productId = productId
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case slot, label
+        case productId = "product_id"
     }
 }

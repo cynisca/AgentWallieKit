@@ -76,6 +76,23 @@ public struct PaywallView: View {
         case .linkRow(let data):
             LinkRowComponentView(data: data, theme: schema.theme, onAction: handleAction)
 
+        case .spacer(let data):
+            SpacerComponentView(data: data, theme: schema.theme)
+
+        case .divider(let data):
+            DividerComponentView(data: data, theme: schema.theme)
+
+        case .stack(let data):
+            StackComponentView(
+                data: data,
+                theme: schema.theme,
+                onAction: handleAction,
+                renderComponent: { child in AnyView(renderComponent(child)) }
+            )
+
+        case .countdownTimer(let data):
+            CountdownTimerComponentView(data: data, theme: schema.theme)
+
         case .unknown:
             EmptyView()
         }

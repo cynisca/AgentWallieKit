@@ -39,8 +39,12 @@ public final class AgentWallie: @unchecked Sendable {
     private var presenter: PaywallPresenter?
     private var storeKitManager: StoreKitManager?
     private var purchaseController: PurchaseController?
+    private var eventTracker: EventTracker?
     private var placementHandlers: [String: () -> Void] = [:]
     private var isConfigured = false
+    private var currentPaywallSchema: PaywallSchema?
+    private var currentPaywallId: String?
+    private var currentCampaignId: String?
 
     private init() {}
 
@@ -68,6 +72,7 @@ public final class AgentWallie: @unchecked Sendable {
         presenter = PaywallPresenter()
         storeKitManager = StoreKitManager()
         purchaseController = storeKitManager
+        eventTracker = EventTracker(apiClient: apiClient!, userManager: userManager!)
 
         isConfigured = true
 
@@ -95,6 +100,7 @@ public final class AgentWallie: @unchecked Sendable {
     /// Reset the current user — clears identity, attributes, and assignments.
     public func reset() {
         ensureConfigured()
+        eventTracker?.flush()
         if let userId = userManager?.effectiveUserId {
             assignmentStore?.clearAssignments(userId: userId)
         }
@@ -108,6 +114,14 @@ public final class AgentWallie: @unchecked Sendable {
     public func setUserAttributes(_ attributes: [String: Any]) {
         ensureConfigured()
         userManager?.setAttributes(attributes)
+    }
+
+    // MARK: - Event Tracking
+
+    /// Track a custom event.
+    public func trackEvent(name: String, properties: [String: Any]? = nil) {
+        ensureConfigured()
+        eventTracker?.track(name: name, properties: properties)
     }
 
     // MARK: - Placements
@@ -244,6 +258,10 @@ public final class AgentWallie: @unchecked Sendable {
         experimentId: String? = nil,
         variantId: String? = nil
     ) {
+        self.currentPaywallSchema = schema
+        self.currentPaywallId = paywallId
+        self.currentCampaignId = campaignId
+
         let info = PaywallPresentationInfo(
             paywallId: paywallId,
             paywallName: schema.name,
@@ -251,6 +269,12 @@ public final class AgentWallie: @unchecked Sendable {
             audienceId: audienceId,
             experimentId: experimentId,
             variantId: variantId
+        )
+
+        eventTracker?.track(
+            name: "paywall_open",
+            campaignId: campaignId,
+            paywallId: paywallId
         )
 
         delegate?.didPresentPaywall(info: info)
@@ -269,12 +293,32 @@ public final class AgentWallie: @unchecked Sendable {
     private func handlePaywallAction(_ action: TapBehavior, param: String?) {
         switch action {
         case .purchase:
-            guard let productId = param else { return }
+            guard let slotName = param else { return }
+
+            // Resolve the slot name to a store product ID
+            guard let storeProductId = resolveStoreProductId(slotName: slotName) else {
+                log(.warn, "Could not resolve product for slot '\(slotName)'. Check paywall products and config.products.")
+                return
+            }
+
+            eventTracker?.track(
+                name: "purchase_started",
+                properties: ["slot": slotName, "store_product_id": storeProductId],
+                campaignId: currentCampaignId,
+                paywallId: currentPaywallId
+            )
+
             Task {
                 do {
-                    let result = try await purchaseController?.purchase(productId: productId)
+                    let result = try await purchaseController?.purchase(productId: storeProductId)
                     if case .purchased = result {
-                        delegate?.didCompletePurchase(productId: productId)
+                        eventTracker?.track(
+                            name: "transaction_complete",
+                            properties: ["slot": slotName, "store_product_id": storeProductId],
+                            campaignId: currentCampaignId,
+                            paywallId: currentPaywallId
+                        )
+                        delegate?.didCompletePurchase(productId: storeProductId)
                     }
                 } catch {
                     log(.error, "Purchase failed: \(error)")
@@ -282,6 +326,12 @@ public final class AgentWallie: @unchecked Sendable {
             }
 
         case .restore:
+            eventTracker?.track(
+                name: "restore_started",
+                campaignId: currentCampaignId,
+                paywallId: currentPaywallId
+            )
+
             Task {
                 do {
                     let result = try await purchaseController?.restorePurchases()
@@ -308,11 +358,39 @@ public final class AgentWallie: @unchecked Sendable {
             }
 
         case .close:
-            break // Handled by PaywallView
+            eventTracker?.track(
+                name: "paywall_close",
+                campaignId: currentCampaignId,
+                paywallId: currentPaywallId
+            )
 
         default:
             break
         }
+    }
+
+    /// Resolve a slot name (e.g., "primary") to an App Store product ID.
+    private func resolveStoreProductId(slotName: String) -> String? {
+        // 1. Find the slot in the current paywall's products array
+        guard let slot = currentPaywallSchema?.products?.first(where: { $0.slot == slotName }) else {
+            log(.warn, "No product slot named '\(slotName)' in current paywall.")
+            return nil
+        }
+
+        // 2. Look up the product by its productId in config.products
+        guard let productId = slot.productId,
+              let config = configManager?.config,
+              let product = config.products.first(where: { $0.id == productId }) else {
+            // Fallback: try matching slot name directly against config products
+            if let config = configManager?.config,
+               let product = config.products.first(where: { $0.id == slotName }) {
+                return product.storeProductId
+            }
+            log(.warn, "No product found for slot '\(slotName)' with productId '\(slot.productId ?? "nil")'.")
+            return nil
+        }
+
+        return product.storeProductId
     }
 
     private func ensureConfigured() {
