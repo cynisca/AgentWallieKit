@@ -46,7 +46,9 @@ public final class AgentWallie: @unchecked Sendable {
     private var currentPaywallId: String?
     private var currentCampaignId: String?
     private var productCache: StoreKitProductCache?
+    private var entitlementManager: EntitlementManager?
     private(set) var resolvedProducts: [ResolvedProductInfo] = []
+    private var lastPrefetchedProductIds: Set<String> = []
 
     private init() {}
 
@@ -73,16 +75,23 @@ public final class AgentWallie: @unchecked Sendable {
         assignmentStore = AssignmentStore()
         presenter = PaywallPresenter()
         productCache = StoreKitProductCache()
+        entitlementManager = EntitlementManager()
         storeKitManager = StoreKitManager()
         storeKitManager?.productCache = productCache
         purchaseController = storeKitManager
         eventTracker = EventTracker(apiClient: apiClient!, userManager: userManager!)
 
-        // Wire config callback to prefetch StoreKit products
+        // Wire config callback to prefetch StoreKit products and update entitlements
         configManager?.onConfigFetched = { [weak self] config in
             guard let self = self else { return }
+            self.entitlementManager?.updateProductMapping(products: config.products)
             Task {
                 await self.prefetchAndResolveProducts(config: config)
+                await self.entitlementManager?.refreshFromStoreKit()
+                if let em = self.entitlementManager {
+                    self.entitlements = em.activeEntitlements
+                    self.subscriptionStatus = em.subscriptionStatus
+                }
             }
         }
 
@@ -117,6 +126,7 @@ public final class AgentWallie: @unchecked Sendable {
             assignmentStore?.clearAssignments(userId: userId)
         }
         userManager?.reset()
+        entitlementManager?.reset()
         entitlements = []
         subscriptionStatus = .unknown
         log(.info, "User reset.")
@@ -330,6 +340,11 @@ public final class AgentWallie: @unchecked Sendable {
                 do {
                     let result = try await purchaseController?.purchase(productId: storeProductId)
                     if case .purchased = result {
+                        entitlementManager?.handlePurchase(storeProductId: storeProductId)
+                        if let em = entitlementManager {
+                            self.entitlements = em.activeEntitlements
+                            self.subscriptionStatus = em.subscriptionStatus
+                        }
                         eventTracker?.track(
                             name: "transaction_complete",
                             properties: ["slot": slotName, "store_product_id": storeProductId],
@@ -354,6 +369,11 @@ public final class AgentWallie: @unchecked Sendable {
                 do {
                     let result = try await purchaseController?.restorePurchases()
                     if case .restored = result {
+                        await entitlementManager?.refreshFromStoreKit()
+                        if let em = entitlementManager {
+                            self.entitlements = em.activeEntitlements
+                            self.subscriptionStatus = em.subscriptionStatus
+                        }
                         delegate?.didRestorePurchases()
                     }
                 } catch {
@@ -425,11 +445,19 @@ public final class AgentWallie: @unchecked Sendable {
             return
         }
 
-        do {
-            try await productCache?.prefetch(productIds: appleProductIds)
-            log(.info, "Prefetched \(appleProductIds.count) StoreKit products.")
-        } catch {
-            log(.error, "Failed to prefetch StoreKit products: \(error)")
+        // Skip StoreKit refetch if product IDs haven't changed and cache is populated
+        if appleProductIds == lastPrefetchedProductIds,
+           let cached = await productCache?.allProducts(),
+           !cached.isEmpty {
+            log(.info, "Product IDs unchanged, skipping StoreKit refetch.")
+        } else {
+            do {
+                try await productCache?.prefetch(productIds: appleProductIds)
+                lastPrefetchedProductIds = appleProductIds
+                log(.info, "Prefetched \(appleProductIds.count) StoreKit products.")
+            } catch {
+                log(.error, "Failed to prefetch StoreKit products: \(error)")
+            }
         }
 
         // Build store products dictionary from cache

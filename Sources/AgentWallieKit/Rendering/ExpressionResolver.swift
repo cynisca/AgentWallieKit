@@ -19,6 +19,10 @@ public struct ExpressionResolver {
     public let userAttributes: [String: Any]?
     public let resolvedProducts: [ResolvedProductInfo]?
 
+    /// Pre-indexed lookups for O(1) access by slot name
+    private let productsBySlot: [String: ProductSlot]
+    private let resolvedProductsBySlot: [String: ResolvedProductInfo]
+
     public init(
         products: [ProductSlot]?,
         selectedProductIndex: Int,
@@ -31,6 +35,23 @@ public struct ExpressionResolver {
         self.theme = theme
         self.userAttributes = userAttributes
         self.resolvedProducts = resolvedProducts
+
+        // Build O(1) lookup dictionaries
+        var pBySlot: [String: ProductSlot] = [:]
+        if let products = products {
+            for p in products {
+                pBySlot[p.slot] = p
+            }
+        }
+        self.productsBySlot = pBySlot
+
+        var rpBySlot: [String: ResolvedProductInfo] = [:]
+        if let resolvedProducts = resolvedProducts {
+            for rp in resolvedProducts {
+                rpBySlot[rp.slot] = rp
+            }
+        }
+        self.resolvedProductsBySlot = rpBySlot
     }
 
     // MARK: - Public API
@@ -91,8 +112,8 @@ public struct ExpressionResolver {
                 product = nil
             }
         default:
-            // Treat as slot name lookup (e.g., "primary", "secondary")
-            product = products.first(where: { $0.slot == selector })
+            // Treat as slot name lookup (e.g., "primary", "secondary") — O(1)
+            product = productsBySlot[selector]
         }
 
         guard let resolvedProduct = product else { return nil }
@@ -140,9 +161,9 @@ public struct ExpressionResolver {
         }
     }
 
-    /// Find the ResolvedProductInfo for a given slot name.
+    /// Find the ResolvedProductInfo for a given slot name — O(1) via pre-indexed dictionary.
     private func findResolvedProduct(forSlot slot: String) -> ResolvedProductInfo? {
-        resolvedProducts?.first(where: { $0.slot == slot })
+        resolvedProductsBySlot[slot]
     }
 
     private func resolveUserPath(parts: [String]) -> String? {
