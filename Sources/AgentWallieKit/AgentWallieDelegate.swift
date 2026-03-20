@@ -19,6 +19,9 @@ public protocol AgentWallieDelegate: AnyObject {
 
     /// Called for SDK log events.
     func handleLog(level: LogLevel, message: String)
+
+    /// Called when subscription status or entitlements change.
+    func didUpdateSubscriptionStatus(_ status: SubscriptionStatus, entitlements: Set<String>)
 }
 
 /// Default implementations so delegates only need to implement what they care about.
@@ -29,6 +32,7 @@ public extension AgentWallieDelegate {
     func didRestorePurchases() {}
     func handleCustomAction(name: String) {}
     func handleLog(level: LogLevel, message: String) {}
+    func didUpdateSubscriptionStatus(_ status: SubscriptionStatus, entitlements: Set<String>) {}
 }
 
 /// Information about a paywall presentation.

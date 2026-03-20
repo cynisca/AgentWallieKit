@@ -45,6 +45,8 @@ public final class AgentWallie: @unchecked Sendable {
     private var currentPaywallSchema: PaywallSchema?
     private var currentPaywallId: String?
     private var currentCampaignId: String?
+    private var productCache: StoreKitProductCache?
+    private(set) var resolvedProducts: [ResolvedProductInfo] = []
 
     private init() {}
 
@@ -70,9 +72,19 @@ public final class AgentWallie: @unchecked Sendable {
         userManager = UserManager()
         assignmentStore = AssignmentStore()
         presenter = PaywallPresenter()
+        productCache = StoreKitProductCache()
         storeKitManager = StoreKitManager()
+        storeKitManager?.productCache = productCache
         purchaseController = storeKitManager
         eventTracker = EventTracker(apiClient: apiClient!, userManager: userManager!)
+
+        // Wire config callback to prefetch StoreKit products
+        configManager?.onConfigFetched = { [weak self] config in
+            guard let self = self else { return }
+            Task {
+                await self.prefetchAndResolveProducts(config: config)
+            }
+        }
 
         isConfigured = true
 
@@ -286,6 +298,7 @@ public final class AgentWallie: @unchecked Sendable {
 
         presenter?.present(
             schema: schema,
+            resolvedProducts: resolvedProducts.isEmpty ? nil : resolvedProducts,
             onAction: { [weak self] action, param in
                 self?.handlePaywallAction(action, param: param)
             },
@@ -396,6 +409,51 @@ public final class AgentWallie: @unchecked Sendable {
         }
 
         return product.storeProductId
+    }
+
+    /// Prefetch StoreKit products and resolve product info for paywall rendering.
+    private func prefetchAndResolveProducts(config: SDKConfig) async {
+        // Extract Apple store product IDs
+        let appleProductIds = Set(
+            config.products
+                .filter { $0.store == .apple }
+                .map { $0.storeProductId }
+        )
+
+        guard !appleProductIds.isEmpty else {
+            log(.info, "No Apple products to prefetch.")
+            return
+        }
+
+        do {
+            try await productCache?.prefetch(productIds: appleProductIds)
+            log(.info, "Prefetched \(appleProductIds.count) StoreKit products.")
+        } catch {
+            log(.error, "Failed to prefetch StoreKit products: \(error)")
+        }
+
+        // Build store products dictionary from cache
+        var storeProducts: [String: any StoreProductProviding] = [:]
+        if let cached = await productCache?.allProducts() {
+            for (id, product) in cached {
+                storeProducts[id] = product
+            }
+        }
+
+        // Resolve products for all paywalls — collect all unique slots
+        let allSlots = config.paywalls.values.compactMap(\.products).flatMap { $0 }
+        let uniqueSlots = Dictionary(grouping: allSlots, by: \.slot)
+            .compactMapValues(\.first)
+            .values
+            .sorted { $0.slot < $1.slot }
+
+        resolvedProducts = ProductResolver.resolve(
+            slots: Array(uniqueSlots),
+            products: config.products,
+            storeProducts: storeProducts
+        )
+
+        log(.info, "Resolved \(resolvedProducts.count) products for paywall rendering.")
     }
 
     private func ensureConfigured() {

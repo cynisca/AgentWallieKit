@@ -68,3 +68,64 @@ public struct ProductSlot: Codable, Sendable {
         case productId = "product_id"
     }
 }
+
+/// Resolved product information combining paywall slot data, dashboard product config,
+/// and live StoreKit pricing. Used at render time to display real prices in paywalls.
+public struct ResolvedProductInfo: Sendable {
+    public let slot: String
+    public let label: String
+    public let productId: String?
+    public let storeProductId: String?
+
+    /// Localized display price, e.g. "$4.99"
+    public var price: String
+
+    /// Normalized monthly price, e.g. "$3.33" for a yearly product
+    public var pricePerMonth: String?
+
+    /// Subscription period unit: "day", "week", "month", "year"
+    public var period: String
+
+    /// Short period label for display: "/mo", "/yr", "/wk"
+    public var periodLabel: String
+
+    /// Trial duration description, e.g. "7 days", "3 days"
+    public var trialPeriod: String?
+
+    /// Trial price, e.g. "Free" or "$0.99"
+    public var trialPrice: String?
+
+    /// Savings percentage relative to monthly pricing, e.g. 50
+    public var savingsPercentage: Int?
+
+    /// Raw decimal price for calculations
+    public var rawPrice: Decimal?
+
+    public init(
+        slot: String,
+        label: String,
+        productId: String? = nil,
+        storeProductId: String? = nil,
+        price: String,
+        pricePerMonth: String? = nil,
+        period: String,
+        periodLabel: String,
+        trialPeriod: String? = nil,
+        trialPrice: String? = nil,
+        savingsPercentage: Int? = nil,
+        rawPrice: Decimal? = nil
+    ) {
+        self.slot = slot
+        self.label = label
+        self.productId = productId
+        self.storeProductId = storeProductId
+        self.price = price
+        self.pricePerMonth = pricePerMonth
+        self.period = period
+        self.periodLabel = periodLabel
+        self.trialPeriod = trialPeriod
+        self.trialPrice = trialPrice
+        self.savingsPercentage = savingsPercentage
+        self.rawPrice = rawPrice
+    }
+}

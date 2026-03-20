@@ -17,17 +17,20 @@ public struct ExpressionResolver {
     public let selectedProductIndex: Int
     public let theme: PaywallTheme?
     public let userAttributes: [String: Any]?
+    public let resolvedProducts: [ResolvedProductInfo]?
 
     public init(
         products: [ProductSlot]?,
         selectedProductIndex: Int,
         theme: PaywallTheme?,
-        userAttributes: [String: Any]? = nil
+        userAttributes: [String: Any]? = nil,
+        resolvedProducts: [ResolvedProductInfo]? = nil
     ) {
         self.products = products
         self.selectedProductIndex = selectedProductIndex
         self.theme = theme
         self.userAttributes = userAttributes
+        self.resolvedProducts = resolvedProducts
     }
 
     // MARK: - Public API
@@ -96,6 +99,35 @@ public struct ExpressionResolver {
         guard parts.count > 1 else { return nil }
 
         let field = parts[1]
+
+        // First try resolving from ResolvedProductInfo for live pricing data
+        if let resolvedInfo = findResolvedProduct(forSlot: resolvedProduct.slot) {
+            switch field {
+            case "price":
+                return resolvedInfo.price
+            case "price_per_month":
+                return resolvedInfo.pricePerMonth
+            case "period":
+                return resolvedInfo.period
+            case "period_label":
+                return resolvedInfo.periodLabel
+            case "trial_period":
+                return resolvedInfo.trialPeriod
+            case "trial_price":
+                return resolvedInfo.trialPrice
+            case "savings_percentage":
+                if let savings = resolvedInfo.savingsPercentage {
+                    return String(savings)
+                }
+                return nil
+            case "has_trial":
+                return String(resolvedInfo.trialPeriod != nil)
+            default:
+                break
+            }
+        }
+
+        // Fall back to ProductSlot fields
         switch field {
         case "label":
             return resolvedProduct.label
@@ -106,6 +138,11 @@ public struct ExpressionResolver {
         default:
             return nil
         }
+    }
+
+    /// Find the ResolvedProductInfo for a given slot name.
+    private func findResolvedProduct(forSlot slot: String) -> ResolvedProductInfo? {
+        resolvedProducts?.first(where: { $0.slot == slot })
     }
 
     private func resolveUserPath(parts: [String]) -> String? {

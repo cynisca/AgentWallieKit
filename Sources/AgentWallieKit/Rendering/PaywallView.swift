@@ -7,17 +7,29 @@ public struct PaywallView: View {
     let schema: PaywallSchema
     let onAction: (TapBehavior, String?) -> Void
     let onDismiss: () -> Void
+    let resolvedProducts: [ResolvedProductInfo]?
 
     @State private var selectedProductIndex: Int = 0
 
     public init(
         schema: PaywallSchema,
+        resolvedProducts: [ResolvedProductInfo]? = nil,
         onAction: @escaping (TapBehavior, String?) -> Void = { _, _ in },
         onDismiss: @escaping () -> Void = {}
     ) {
         self.schema = schema
+        self.resolvedProducts = resolvedProducts
         self.onAction = onAction
         self.onDismiss = onDismiss
+    }
+
+    private var expressionResolver: ExpressionResolver {
+        ExpressionResolver(
+            products: schema.products,
+            selectedProductIndex: selectedProductIndex,
+            theme: schema.theme,
+            resolvedProducts: resolvedProducts
+        )
     }
 
     public var body: some View {
@@ -76,18 +88,19 @@ public struct PaywallView: View {
     private func renderComponent(_ component: PaywallComponent) -> some View {
         switch component {
         case .text(let data):
-            TextComponentView(data: data, theme: schema.theme)
+            TextComponentView(data: data, theme: schema.theme, resolver: expressionResolver)
 
         case .image(let data):
             ImageComponentView(data: data, theme: schema.theme)
 
         case .ctaButton(let data):
-            CTAButtonComponentView(data: data, theme: schema.theme, onAction: handleAction)
+            CTAButtonComponentView(data: data, theme: schema.theme, onAction: handleAction, resolver: expressionResolver)
 
         case .productPicker(let data):
             ProductPickerComponentView(
                 data: data,
                 products: schema.products ?? [],
+                resolvedProducts: resolvedProducts ?? [],
                 theme: schema.theme,
                 selectedProductIndex: $selectedProductIndex
             )
