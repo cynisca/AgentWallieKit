@@ -122,6 +122,7 @@ struct StyleModifier: ViewModifier {
             .padding(.leading, CGFloat(style?.marginLeft ?? style?.marginHorizontal ?? 0))
             .padding(.trailing, CGFloat(style?.marginRight ?? style?.marginHorizontal ?? 0))
             .opacity(style?.opacity ?? 1.0)
+            .applyOptionalGlow(resolveColor(style?.glowColor, theme: theme))
     }
 
     /// Returns numeric width only (ignores percentage strings like "100%")
@@ -186,6 +187,15 @@ extension View {
                 RoundedRectangle(cornerRadius: cornerRadius)
                     .stroke(color, lineWidth: CGFloat(width))
             )
+        } else {
+            self
+        }
+    }
+
+    @ViewBuilder
+    func applyOptionalGlow(_ color: Color?) -> some View {
+        if let color = color {
+            self.shadow(color: color, radius: 15, x: 0, y: 4)
         } else {
             self
         }

@@ -582,6 +582,60 @@ final class PaywallSchemaTests: XCTestCase {
         XCTAssertEqual(decoded.opacity, 0.9)
     }
 
+    func testComponentStyleGlowColorRoundTrip() throws {
+        var style = ComponentStyle()
+        style.glowColor = "#FF6600"
+        let decoded = try roundTrip(style)
+        XCTAssertEqual(decoded.glowColor, "#FF6600")
+    }
+
+    func testComponentStyleLetterSpacingRoundTrip() throws {
+        var style = ComponentStyle()
+        style.letterSpacing = 2.5
+        let decoded = try roundTrip(style)
+        XCTAssertEqual(decoded.letterSpacing, 2.5)
+    }
+
+    func testPaywallSettingsBackgroundGradientRoundTrip() throws {
+        let settings = PaywallSettings(
+            backgroundGradient: BackgroundGradient(colors: ["#000000", "#FFFFFF"], direction: "vertical")
+        )
+        let decoded = try roundTrip(settings)
+        XCTAssertNotNil(decoded.backgroundGradient)
+        XCTAssertEqual(decoded.backgroundGradient?.colors, ["#000000", "#FFFFFF"])
+        XCTAssertEqual(decoded.backgroundGradient?.direction, "vertical")
+    }
+
+    func testPaywallSettingsCloseButtonStyleRoundTrip() throws {
+        let settings = PaywallSettings(closeButtonStyle: "text")
+        let decoded = try roundTrip(settings)
+        XCTAssertEqual(decoded.closeButtonStyle, "text")
+    }
+
+    func testPaywallSettingsCloseButtonStyleDefaultNil() throws {
+        let settings = PaywallSettings()
+        XCTAssertNil(settings.closeButtonStyle)
+    }
+
+    func testProductPickerShowPriceRoundTrip() throws {
+        let component = PaywallComponent.productPicker(ProductPickerComponentData(
+            id: "picker_price",
+            props: ProductPickerComponentData.ProductPickerProps(
+                layout: "cards",
+                savingsText: "BEST VALUE",
+                showPrice: false
+            )
+        ))
+        let decoded = try roundTrip(component)
+        if case .productPicker(let d) = decoded {
+            XCTAssertEqual(d.props.layout, "cards")
+            XCTAssertEqual(d.props.savingsText, "BEST VALUE")
+            XCTAssertEqual(d.props.showPrice, false)
+        } else {
+            XCTFail("Expected product_picker component")
+        }
+    }
+
     // MARK: - ComponentCondition
 
     func testConditionDecodeOnComponent() throws {

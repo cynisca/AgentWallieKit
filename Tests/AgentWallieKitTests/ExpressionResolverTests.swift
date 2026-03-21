@@ -327,4 +327,67 @@ final class ExpressionResolverTests: XCTestCase {
             "/yr"
         )
     }
+
+    // MARK: - Selected Product Changes With Index
+
+    func testSelectedProductPriceChangesWithIndex() {
+        let r0 = resolver(
+            products: sampleProducts,
+            selectedIndex: 0,
+            resolvedProducts: sampleResolvedProducts
+        )
+        XCTAssertEqual(r0.resolve("{{ products.selected.price }}"), "$9.99")
+
+        let r1 = resolver(
+            products: sampleProducts,
+            selectedIndex: 1,
+            resolvedProducts: sampleResolvedProducts
+        )
+        XCTAssertEqual(r1.resolve("{{ products.selected.price }}"), "$49.99")
+    }
+
+    // MARK: - Fallback to AWProduct when resolvedProducts is empty
+
+    func testFallbackToAWProductDisplayPrice() {
+        let awProducts = [
+            AWProduct(
+                id: "com.app.monthly",
+                name: "Monthly",
+                store: .apple,
+                storeProductId: "com.app.monthly",
+                entitlements: ["premium"],
+                displayPrice: "$9.99",
+                displayPeriod: "/mo"
+            )
+        ]
+        let r = ExpressionResolver(
+            products: sampleProducts,
+            selectedProductIndex: 0,
+            theme: nil,
+            resolvedProducts: [],
+            awProducts: awProducts
+        )
+        XCTAssertEqual(r.resolve("{{ products.selected.price }}"), "$9.99")
+        XCTAssertEqual(r.resolve("{{ products.selected.period }}"), "/mo")
+    }
+
+    func testFallbackReturnsLabelWithoutAWProducts() {
+        let r = ExpressionResolver(
+            products: sampleProducts,
+            selectedProductIndex: 0,
+            theme: nil,
+            resolvedProducts: [],
+            awProducts: nil
+        )
+        // price should stay as-is since no resolvedProducts and no awProducts
+        XCTAssertEqual(
+            r.resolve("{{ products.selected.price }}"),
+            "{{ products.selected.price }}"
+        )
+        // label should still resolve from ProductSlot
+        XCTAssertEqual(
+            r.resolve("{{ products.selected.label }}"),
+            "Monthly - $9.99"
+        )
+    }
 }

@@ -46,6 +46,8 @@ public struct PaywallSettings: Codable, Sendable {
     public let backgroundColor: String
     public let scrollEnabled: Bool
     public let safeAreaInsets: Bool
+    public let backgroundGradient: BackgroundGradient?
+    public let closeButtonStyle: String?
 
     public init(
         presentation: PresentationType = .modal,
@@ -53,7 +55,9 @@ public struct PaywallSettings: Codable, Sendable {
         closeButtonDelayMs: Int = 0,
         backgroundColor: String = "#FFFFFF",
         scrollEnabled: Bool = true,
-        safeAreaInsets: Bool = true
+        safeAreaInsets: Bool = true,
+        backgroundGradient: BackgroundGradient? = nil,
+        closeButtonStyle: String? = nil
     ) {
         self.presentation = presentation
         self.closeButton = closeButton
@@ -61,6 +65,8 @@ public struct PaywallSettings: Codable, Sendable {
         self.backgroundColor = backgroundColor
         self.scrollEnabled = scrollEnabled
         self.safeAreaInsets = safeAreaInsets
+        self.backgroundGradient = backgroundGradient
+        self.closeButtonStyle = closeButtonStyle
     }
 
     enum CodingKeys: String, CodingKey {
@@ -70,6 +76,8 @@ public struct PaywallSettings: Codable, Sendable {
         case backgroundColor = "background_color"
         case scrollEnabled = "scroll_enabled"
         case safeAreaInsets = "safe_area_insets"
+        case backgroundGradient = "background_gradient"
+        case closeButtonStyle = "close_button_style"
     }
 
     public init(from decoder: Decoder) throws {
@@ -80,6 +88,8 @@ public struct PaywallSettings: Codable, Sendable {
         backgroundColor = try container.decodeIfPresent(String.self, forKey: .backgroundColor) ?? "#FFFFFF"
         scrollEnabled = try container.decodeIfPresent(Bool.self, forKey: .scrollEnabled) ?? true
         safeAreaInsets = try container.decodeIfPresent(Bool.self, forKey: .safeAreaInsets) ?? true
+        backgroundGradient = try container.decodeIfPresent(BackgroundGradient.self, forKey: .backgroundGradient)
+        closeButtonStyle = try container.decodeIfPresent(String.self, forKey: .closeButtonStyle)
     }
 }
 
@@ -238,6 +248,8 @@ public struct ComponentStyle: Codable, Sendable {
     public var borderWidth: Double?
     public var borderColor: String?
     public var backgroundGradient: BackgroundGradient?
+    public var glowColor: String?
+    public var letterSpacing: Double?
 
     public init() {}
 
@@ -263,6 +275,8 @@ public struct ComponentStyle: Codable, Sendable {
         case borderWidth = "border_width"
         case borderColor = "border_color"
         case backgroundGradient = "background_gradient"
+        case glowColor = "glow_color"
+        case letterSpacing = "letter_spacing"
     }
 }
 
@@ -570,17 +584,20 @@ public struct ProductPickerComponentData: Codable, Sendable {
         public let showSavingsBadge: Bool?
         public let savingsText: String?
         public let selectedBorderColor: String?
+        public let showPrice: Bool?
 
         public init(
             layout: String = "horizontal",
             showSavingsBadge: Bool? = nil,
             savingsText: String? = nil,
-            selectedBorderColor: String? = nil
+            selectedBorderColor: String? = nil,
+            showPrice: Bool? = nil
         ) {
             self.layout = layout
             self.showSavingsBadge = showSavingsBadge
             self.savingsText = savingsText
             self.selectedBorderColor = selectedBorderColor
+            self.showPrice = showPrice
         }
 
         enum CodingKeys: String, CodingKey {
@@ -588,6 +605,16 @@ public struct ProductPickerComponentData: Codable, Sendable {
             case showSavingsBadge = "show_savings_badge"
             case savingsText = "savings_text"
             case selectedBorderColor = "selected_border_color"
+            case showPrice = "show_price"
+        }
+
+        public init(from decoder: Decoder) throws {
+            let container = try decoder.container(keyedBy: CodingKeys.self)
+            layout = try container.decodeIfPresent(String.self, forKey: .layout) ?? "horizontal"
+            showSavingsBadge = try container.decodeIfPresent(Bool.self, forKey: .showSavingsBadge)
+            savingsText = try container.decodeIfPresent(String.self, forKey: .savingsText)
+            selectedBorderColor = try container.decodeIfPresent(String.self, forKey: .selectedBorderColor)
+            showPrice = try container.decodeIfPresent(Bool.self, forKey: .showPrice) ?? true
         }
     }
 }

@@ -96,6 +96,15 @@ final class AnimationTests: XCTestCase {
         XCTAssertNotNil(modifier)
     }
 
+    // MARK: - Shimmer Animation
+
+    func testShimmerTypeRecognized() {
+        let anim = ComponentAnimation(type: "shimmer")
+        XCTAssertEqual(anim.type, "shimmer")
+        let modifier = AnimationModifier(animation: anim)
+        XCTAssertNotNil(modifier)
+    }
+
     // MARK: - Animation Type Constants
 
     func testAnimationTypeConstants() {
@@ -106,6 +115,7 @@ final class AnimationTests: XCTestCase {
         XCTAssertEqual(AnimationTypeValue.bounce, "bounce")
         XCTAssertEqual(AnimationTypeValue.pulse, "pulse")
         XCTAssertEqual(AnimationTypeValue.shake, "shake")
+        XCTAssertEqual(AnimationTypeValue.shimmer, "shimmer")
     }
 
     // MARK: - JSON Encoding/Decoding
