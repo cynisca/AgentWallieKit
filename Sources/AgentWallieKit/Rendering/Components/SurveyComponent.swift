@@ -12,7 +12,7 @@ struct SurveyComponentView: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text(data.props.question)
-                .font(.headline)
+                .font(resolveFont(textStyle: "headline", fontSize: data.style?.fontSize, fontFamily: data.style?.fontFamily, theme: theme))
                 .foregroundColor(resolveColor(data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? PaywallTheme.defaultTextPrimary))
 
             ForEach(Array(data.props.options.enumerated()), id: \.offset) { index, option in

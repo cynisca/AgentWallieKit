@@ -7,9 +7,18 @@ struct TextComponentView: View {
     let theme: PaywallTheme?
     var resolver: ExpressionResolver?
 
+    private var resolvedFont: Font {
+        resolveFont(
+            textStyle: data.props.textStyle,
+            fontSize: data.style?.fontSize,
+            fontFamily: data.style?.fontFamily,
+            theme: theme
+        )
+    }
+
     var body: some View {
         renderedText
-            .font(font(for: data.props.textStyle))
+            .font(resolvedFont)
             .multilineTextAlignment(textAlignment(data.props.alignment))
             .frame(maxWidth: .infinity, alignment: frameAlignment(data.props.alignment))
             .foregroundColor(resolveColor(data.style?.color ?? data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? PaywallTheme.defaultTextPrimary))
@@ -51,7 +60,7 @@ struct TextComponentView: View {
 
             // Append bold text
             var boldPart = AttributedString(text[innerRange])
-            boldPart.font = font(for: data.props.textStyle).bold()
+            boldPart.font = resolvedFont.bold()
             result.append(boldPart)
 
             lastEnd = fullRange.upperBound
@@ -65,22 +74,6 @@ struct TextComponentView: View {
         return result
     }
 
-    private func font(for textStyle: String?) -> Font {
-        switch textStyle {
-        case "largeTitle": return .largeTitle
-        case "title1": return .title
-        case "title2": return .title2
-        case "title3": return .title3
-        case "headline": return .headline
-        case "subheadline": return .subheadline
-        case "body": return .body
-        case "callout": return .callout
-        case "footnote": return .footnote
-        case "caption": return .caption
-        case "caption2": return .caption2
-        default: return .body
-        }
-    }
 }
 
 // MARK: - Tracking Extension

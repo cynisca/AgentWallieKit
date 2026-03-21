@@ -37,9 +37,9 @@ struct FeatureListComponentView: View {
                     }
                     Image(systemName: item.icon)
                         .foregroundColor(resolveColor(data.props.iconColor, theme: theme) ?? Color(hex: theme?.accent ?? PaywallTheme.defaultAccent))
-                        .font(.body)
+                        .font(resolveFont(textStyle: "body", fontSize: data.style?.fontSize, fontFamily: data.style?.fontFamily, theme: theme))
                     Text(item.text)
-                        .font(.body)
+                        .font(resolveFont(textStyle: "body", fontSize: data.style?.fontSize, fontFamily: data.style?.fontFamily, theme: theme))
                         .foregroundColor(resolveColor(data.style?.color ?? data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? PaywallTheme.defaultTextPrimary))
                 }
                 .padding(.horizontal, rowPaddingH)

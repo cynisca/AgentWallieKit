@@ -7,12 +7,16 @@ struct LinkRowComponentView: View {
     let theme: PaywallTheme?
     let onAction: (TapBehavior, String?) -> Void
 
+    private var linkFont: Font {
+        resolveFont(textStyle: "caption", fontSize: data.style?.fontSize, fontFamily: data.style?.fontFamily, theme: theme)
+    }
+
     var body: some View {
         HStack(spacing: 4) {
             ForEach(Array(data.props.links.enumerated()), id: \.offset) { index, link in
                 if index > 0, let separator = data.props.separator {
                     Text(separator)
-                        .font(.system(size: fontSize))
+                        .font(linkFont)
                         .foregroundColor(separatorColor)
                 }
 
@@ -24,17 +28,13 @@ struct LinkRowComponentView: View {
                     }
                 }) {
                     Text(link.text)
-                        .font(.system(size: fontSize))
+                        .font(linkFont)
                         .foregroundColor(textColor)
                 }
             }
         }
         .frame(maxWidth: .infinity)
         .modifier(StyleModifier(style: data.style, theme: theme))
-    }
-
-    private var fontSize: CGFloat {
-        CGFloat(data.style?.fontSize ?? 12)
     }
 
     private var textColor: Color {

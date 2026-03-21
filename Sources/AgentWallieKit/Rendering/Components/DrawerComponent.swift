@@ -32,7 +32,7 @@ struct DrawerComponentView: View {
             }) {
                 HStack {
                     Text(data.props.title)
-                        .font(.headline)
+                        .font(resolveFont(textStyle: "headline", fontSize: data.style?.fontSize, fontFamily: data.style?.fontFamily, theme: theme))
                         .foregroundColor(resolveColor(data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? PaywallTheme.defaultTextPrimary))
                     Spacer()
                     Image(systemName: isExpanded ? "chevron.up" : "chevron.down")

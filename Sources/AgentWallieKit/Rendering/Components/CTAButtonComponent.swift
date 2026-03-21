@@ -23,12 +23,12 @@ struct CTAButtonComponentView: View {
         Button(action: { onAction(data.props.action, data.props.product) }) {
             VStack(spacing: 4) {
                 Text(resolvedText)
-                    .font(.headline)
+                    .font(resolveFont(textStyle: "headline", fontSize: data.style?.fontSize, fontFamily: data.style?.fontFamily, theme: theme))
                     .foregroundColor(resolveColor(data.style?.textColor, theme: theme) ?? .white)
 
                 if let subtitle = resolvedSubtitle {
                     Text(subtitle)
-                        .font(.subheadline)
+                        .font(resolveFont(textStyle: "subheadline", fontSize: nil, fontFamily: data.style?.fontFamily, theme: theme))
                         .foregroundColor((resolveColor(data.style?.textColor, theme: theme) ?? .white).opacity(0.8))
                 }
             }

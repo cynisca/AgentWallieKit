@@ -17,7 +17,8 @@ struct BadgeComponentView: View {
 
     var body: some View {
         Text(data.props.text)
-            .font(.system(size: data.style?.fontSize ?? 12, weight: .semibold))
+            .font(resolveFont(textStyle: "caption", fontSize: data.style?.fontSize, fontFamily: data.style?.fontFamily, theme: theme))
+            .fontWeight(.semibold)
             .foregroundColor(foregroundColor)
             .padding(.horizontal, 12)
             .padding(.vertical, 6)
