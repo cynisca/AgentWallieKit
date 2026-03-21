@@ -18,6 +18,7 @@ public struct ExpressionResolver {
     public let theme: PaywallTheme?
     public let userAttributes: [String: Any]?
     public let resolvedProducts: [ResolvedProductInfo]?
+    public let awProducts: [AWProduct]?
 
     /// Pre-indexed lookups for O(1) access by slot name
     private let productsBySlot: [String: ProductSlot]
@@ -28,13 +29,15 @@ public struct ExpressionResolver {
         selectedProductIndex: Int,
         theme: PaywallTheme?,
         userAttributes: [String: Any]? = nil,
-        resolvedProducts: [ResolvedProductInfo]? = nil
+        resolvedProducts: [ResolvedProductInfo]? = nil,
+        awProducts: [AWProduct]? = nil
     ) {
         self.products = products
         self.selectedProductIndex = selectedProductIndex
         self.theme = theme
         self.userAttributes = userAttributes
         self.resolvedProducts = resolvedProducts
+        self.awProducts = awProducts
 
         // Build O(1) lookup dictionaries
         var pBySlot: [String: ProductSlot] = [:]
@@ -145,6 +148,19 @@ public struct ExpressionResolver {
                 return String(resolvedInfo.trialPeriod != nil)
             default:
                 break
+            }
+        } else if let awProducts = awProducts {
+            // Fallback: when resolvedProducts is empty (StoreKit fetch failed),
+            // try to resolve from AWProduct display data
+            if let awProduct = awProducts.first(where: { $0.storeProductId == resolvedProduct.productId || $0.id == resolvedProduct.productId }) {
+                switch field {
+                case "price":
+                    if let dp = awProduct.displayPrice { return dp }
+                case "period", "period_label":
+                    if let dp = awProduct.displayPeriod { return dp }
+                default:
+                    break
+                }
             }
         }
 

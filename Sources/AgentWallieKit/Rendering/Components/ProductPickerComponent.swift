@@ -14,9 +14,18 @@ struct ProductPickerComponentView: View {
         resolvedProducts.first(where: { $0.slot == slot })
     }
 
+    /// Whether to show price info (default true).
+    private var showPrice: Bool {
+        data.props.showPrice ?? true
+    }
+
     var body: some View {
         Group {
-            if data.props.layout == "vertical" {
+            if data.props.layout == "cards" {
+                HStack(spacing: 12) {
+                    cardButtons
+                }
+            } else if data.props.layout == "vertical" {
                 VStack(spacing: 12) {
                     productButtons
                 }
@@ -46,6 +55,8 @@ struct ProductPickerComponentView: View {
         Color(hex: theme?.textSecondary ?? PaywallTheme.defaultTextSecondary)
     }
 
+    // MARK: - Standard Layout (horizontal/vertical)
+
     @ViewBuilder
     private var productButtons: some View {
         ForEach(Array(products.enumerated()), id: \.element.slot) { index, product in
@@ -57,7 +68,7 @@ struct ProductPickerComponentView: View {
                         .fontWeight(index == selectedProductIndex ? .bold : .regular)
                         .foregroundColor(index == selectedProductIndex ? textPrimaryColor : textSecondaryColor)
 
-                    if let resolved = resolved, !resolved.price.isEmpty {
+                    if showPrice, let resolved = resolved, !resolved.price.isEmpty {
                         Text("\(resolved.price)\(resolved.periodLabel)")
                             .font(.caption)
                             .fontWeight(.medium)
@@ -102,5 +113,103 @@ struct ProductPickerComponentView: View {
                 }
             }
         }
+    }
+
+    // MARK: - Cards Layout
+
+    @ViewBuilder
+    private var cardButtons: some View {
+        ForEach(Array(products.enumerated()), id: \.element.slot) { index, product in
+            let resolved = resolvedProduct(forSlot: product.slot)
+            let isSelected = index == selectedProductIndex
+            let cr = CGFloat(theme?.cornerRadius ?? 12)
+
+            Button(action: { selectedProductIndex = index }) {
+                VStack(spacing: 8) {
+                    // Plan label in caps
+                    Text(product.label.uppercased())
+                        .font(.caption)
+                        .fontWeight(.bold)
+                        .foregroundColor(isSelected ? selectedColor : textSecondaryColor)
+                        .tracking(1)
+
+                    if showPrice {
+                        // Large price
+                        Text(resolved?.price ?? "")
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .foregroundColor(textPrimaryColor)
+
+                        // Period subtext
+                        if let periodLabel = resolved?.periodLabel, !periodLabel.isEmpty {
+                            Text(periodLabel)
+                                .font(.caption)
+                                .foregroundColor(textSecondaryColor)
+                        }
+
+                        // Savings percentage in accent
+                        if let savings = resolved?.savingsPercentage {
+                            Text("Save \(savings)%")
+                                .font(.caption2)
+                                .fontWeight(.semibold)
+                                .foregroundColor(Color(hex: theme?.accent ?? PaywallTheme.defaultAccent))
+                        }
+                    }
+
+                    // Trial info
+                    if let trialPeriod = resolved?.trialPeriod,
+                       let trialPrice = resolved?.trialPrice {
+                        Text("\(trialPeriod) \(trialPrice.lowercased()) trial")
+                            .font(.caption2)
+                            .foregroundColor(isSelected ? selectedColor : textSecondaryColor)
+                    }
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 20)
+                .padding(.horizontal, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: cr)
+                        .fill(surfaceColor)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: cr)
+                        .stroke(isSelected ? selectedColor : Color.clear, lineWidth: 2)
+                )
+                .applyIf(isSelected) { view in
+                    view.shadow(color: selectedColor.opacity(0.4), radius: 12, x: 0, y: 4)
+                }
+            }
+            .overlay(alignment: .top) {
+                // Badge overlapping top edge
+                if let badgeText = badgeText(forIndex: index, resolved: resolved) {
+                    Text(badgeText)
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 4)
+                        .background(selectedColor)
+                        .cornerRadius(8)
+                        .offset(y: -10)
+                }
+            }
+        }
+    }
+
+    /// Determine badge text for a card. Uses custom `savings_text` if provided,
+    /// otherwise falls back to "BEST VALUE" for the product with highest savings.
+    private func badgeText(forIndex index: Int, resolved: ResolvedProductInfo?) -> String? {
+        // Custom savings_text applies to the first product with savings
+        if let customText = data.props.savingsText {
+            if let savings = resolved?.savingsPercentage, savings > 0 {
+                return customText
+            }
+            return nil
+        }
+        // Default: show "BEST VALUE" on product with savings
+        if let savings = resolved?.savingsPercentage, savings > 0 {
+            return "BEST VALUE"
+        }
+        return nil
     }
 }

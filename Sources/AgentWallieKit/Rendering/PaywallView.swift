@@ -32,7 +32,7 @@ public struct PaywallView: View {
         )
 
         ZStack(alignment: .topTrailing) {
-            backgroundColor
+            backgroundView
                 .ignoresSafeArea()
 
             ScrollView(schema.settings.scrollEnabled ? .vertical : []) {
@@ -49,16 +49,34 @@ public struct PaywallView: View {
             }
 
             if schema.settings.closeButton {
-                Button(action: { onDismiss() }) {
-                    Image(systemName: "xmark")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(closeButtonForeground)
-                        .frame(width: 30, height: 30)
-                        .background(closeButtonBackground)
-                        .clipShape(Circle())
-                        .padding(16)
+                if schema.settings.closeButtonStyle == "text" {
+                    Button(action: { onDismiss() }) {
+                        Text("\u{2715} Close")
+                            .font(.subheadline)
+                            .foregroundColor(closeButtonForeground)
+                            .padding(16)
+                    }
+                } else {
+                    Button(action: { onDismiss() }) {
+                        Image(systemName: "xmark")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(closeButtonForeground)
+                            .frame(width: 30, height: 30)
+                            .background(closeButtonBackground)
+                            .clipShape(Circle())
+                            .padding(16)
+                    }
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private var backgroundView: some View {
+        if let gradient = schema.settings.backgroundGradient, !gradient.colors.isEmpty {
+            GradientBackground(gradient: gradient, theme: schema.theme)
+        } else {
+            backgroundColor
         }
     }
 

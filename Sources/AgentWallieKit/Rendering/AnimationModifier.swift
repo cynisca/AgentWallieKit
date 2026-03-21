@@ -11,6 +11,7 @@ enum AnimationTypeValue {
     static let bounce = "bounce"
     static let pulse = "pulse"
     static let shake = "shake"
+    static let shimmer = "shimmer"
 }
 
 // MARK: - Animation Modifier
@@ -26,6 +27,7 @@ struct AnimationModifier: ViewModifier {
     @State private var hasAppeared = false
     @State private var pulseValue = false
     @State private var shakeOffset: CGFloat = 0
+    @State private var shimmerOffset: CGFloat = -1
 
     /// Default duration in seconds when none is specified.
     static let defaultDurationSeconds: Double = 0.3
@@ -91,6 +93,27 @@ struct AnimationModifier: ViewModifier {
             .opacity(opacity)
             .offset(x: xOffset, y: yOffset)
             .scaleEffect(scale)
+            .overlay {
+                if animation?.type == AnimationTypeValue.shimmer {
+                    GeometryReader { geo in
+                        let width = geo.size.width
+                        LinearGradient(
+                            colors: [
+                                Color.clear,
+                                Color.white.opacity(0.12),
+                                Color.clear
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                        .frame(width: width * 0.4)
+                        .offset(x: shimmerOffset * width)
+                        .clipped()
+                    }
+                    .allowsHitTesting(false)
+                    .clipped()
+                }
+            }
             .task {
                 guard let animation = animation else { return }
                 switch animation.type {
@@ -103,6 +126,8 @@ struct AnimationModifier: ViewModifier {
                     await startPulse()
                 case AnimationTypeValue.shake:
                     await startShake()
+                case AnimationTypeValue.shimmer:
+                    await startShimmer()
                 default:
                     break
                 }
@@ -128,6 +153,14 @@ struct AnimationModifier: ViewModifier {
         guard !Task.isCancelled else { return }
         withAnimation(.easeInOut(duration: duration).repeatForever(autoreverses: true)) {
             pulseValue = true
+        }
+    }
+
+    private func startShimmer() async {
+        try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+        guard !Task.isCancelled else { return }
+        withAnimation(.linear(duration: duration > 0 ? duration : 1.5).repeatForever(autoreverses: false)) {
+            shimmerOffset = 1.5
         }
     }
 
