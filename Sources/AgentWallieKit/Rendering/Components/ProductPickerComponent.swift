@@ -55,6 +55,10 @@ struct ProductPickerComponentView: View {
         Color(hex: theme?.textSecondary ?? PaywallTheme.defaultTextSecondary)
     }
 
+    private var componentFontFamily: String? {
+        data.style?.fontFamily
+    }
+
     // MARK: - Standard Layout (horizontal/vertical)
 
     @ViewBuilder
@@ -64,13 +68,13 @@ struct ProductPickerComponentView: View {
             Button(action: { selectedProductIndex = index }) {
                 VStack(spacing: 4) {
                     Text(product.label)
-                        .font(.subheadline)
+                        .font(resolveFont(textStyle: "subheadline", fontSize: nil, fontFamily: componentFontFamily, theme: theme))
                         .fontWeight(index == selectedProductIndex ? .bold : .regular)
                         .foregroundColor(index == selectedProductIndex ? textPrimaryColor : textSecondaryColor)
 
                     if showPrice, let resolved = resolved, !resolved.price.isEmpty {
                         Text("\(resolved.price)\(resolved.periodLabel)")
-                            .font(.caption)
+                            .font(resolveFont(textStyle: "caption", fontSize: nil, fontFamily: componentFontFamily, theme: theme))
                             .fontWeight(.medium)
                             .foregroundColor(index == selectedProductIndex ? textPrimaryColor : textSecondaryColor)
                     }
@@ -78,7 +82,7 @@ struct ProductPickerComponentView: View {
                     if let trialPeriod = resolved?.trialPeriod,
                        let trialPrice = resolved?.trialPrice {
                         Text("\(trialPeriod) \(trialPrice.lowercased()) trial")
-                            .font(.caption2)
+                            .font(resolveFont(textStyle: "caption2", fontSize: nil, fontFamily: componentFontFamily, theme: theme))
                             .foregroundColor(index == selectedProductIndex ? selectedColor : textSecondaryColor)
                     }
                 }
@@ -101,7 +105,7 @@ struct ProductPickerComponentView: View {
                     if data.props.showSavingsBadge == true,
                        let savings = resolved?.savingsPercentage {
                         Text("Save \(savings)%")
-                            .font(.caption2)
+                            .font(resolveFont(textStyle: "caption2", fontSize: nil, fontFamily: componentFontFamily, theme: theme))
                             .fontWeight(.bold)
                             .foregroundColor(.white)
                             .padding(.horizontal, 8)
@@ -128,7 +132,7 @@ struct ProductPickerComponentView: View {
                 VStack(spacing: 8) {
                     // Plan label in caps
                     Text(product.label.uppercased())
-                        .font(.caption)
+                        .font(resolveFont(textStyle: "caption", fontSize: nil, fontFamily: componentFontFamily, theme: theme))
                         .fontWeight(.bold)
                         .foregroundColor(isSelected ? selectedColor : textSecondaryColor)
                         .tracking(1)
@@ -136,21 +140,21 @@ struct ProductPickerComponentView: View {
                     if showPrice {
                         // Large price
                         Text(resolved?.price ?? "")
-                            .font(.title)
+                            .font(resolveFont(textStyle: "title1", fontSize: nil, fontFamily: componentFontFamily, theme: theme))
                             .fontWeight(.bold)
                             .foregroundColor(textPrimaryColor)
 
                         // Period subtext
                         if let periodLabel = resolved?.periodLabel, !periodLabel.isEmpty {
                             Text(periodLabel)
-                                .font(.caption)
+                                .font(resolveFont(textStyle: "caption", fontSize: nil, fontFamily: componentFontFamily, theme: theme))
                                 .foregroundColor(textSecondaryColor)
                         }
 
                         // Savings percentage in accent
                         if let savings = resolved?.savingsPercentage {
                             Text("Save \(savings)%")
-                                .font(.caption2)
+                                .font(resolveFont(textStyle: "caption2", fontSize: nil, fontFamily: componentFontFamily, theme: theme))
                                 .fontWeight(.semibold)
                                 .foregroundColor(Color(hex: theme?.accent ?? PaywallTheme.defaultAccent))
                         }
@@ -160,7 +164,7 @@ struct ProductPickerComponentView: View {
                     if let trialPeriod = resolved?.trialPeriod,
                        let trialPrice = resolved?.trialPrice {
                         Text("\(trialPeriod) \(trialPrice.lowercased()) trial")
-                            .font(.caption2)
+                            .font(resolveFont(textStyle: "caption2", fontSize: nil, fontFamily: componentFontFamily, theme: theme))
                             .foregroundColor(isSelected ? selectedColor : textSecondaryColor)
                     }
                 }
@@ -183,7 +187,7 @@ struct ProductPickerComponentView: View {
                 // Badge overlapping top edge
                 if let badgeText = badgeText(forIndex: index, resolved: resolved) {
                     Text(badgeText)
-                        .font(.caption2)
+                        .font(resolveFont(textStyle: "caption2", fontSize: nil, fontFamily: componentFontFamily, theme: theme))
                         .fontWeight(.bold)
                         .foregroundColor(.white)
                         .padding(.horizontal, 10)

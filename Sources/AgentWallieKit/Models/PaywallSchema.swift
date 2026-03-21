@@ -95,6 +95,24 @@ public struct PaywallSettings: Codable, Sendable {
 
 // MARK: - Theme
 
+public struct FontFamilies: Codable, Sendable {
+    public let display: String?   // for title1, title2, title3
+    public let heading: String?   // for headline, subheadline
+    public let body: String?      // for body, callout
+    public let mono: String?      // for caption, caption2, footnote
+
+    public init(display: String? = nil, heading: String? = nil, body: String? = nil, mono: String? = nil) {
+        self.display = display
+        self.heading = heading
+        self.body = body
+        self.mono = mono
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case display, heading, body, mono
+    }
+}
+
 public struct PaywallTheme: Codable, Sendable {
     public let background: String
     public let primary: String
@@ -105,6 +123,7 @@ public struct PaywallTheme: Codable, Sendable {
     public let surface: String
     public let cornerRadius: Double
     public let fontFamily: String
+    public let fontFamilies: FontFamilies?
 
     public init(
         background: String = "#FFFFFF",
@@ -115,7 +134,8 @@ public struct PaywallTheme: Codable, Sendable {
         accent: String = "#34C759",
         surface: String = "#F2F2F7",
         cornerRadius: Double = 12,
-        fontFamily: String = "system"
+        fontFamily: String = "system",
+        fontFamilies: FontFamilies? = nil
     ) {
         self.background = background
         self.primary = primary
@@ -126,6 +146,7 @@ public struct PaywallTheme: Codable, Sendable {
         self.surface = surface
         self.cornerRadius = cornerRadius
         self.fontFamily = fontFamily
+        self.fontFamilies = fontFamilies
     }
 
     enum CodingKeys: String, CodingKey {
@@ -134,6 +155,7 @@ public struct PaywallTheme: Codable, Sendable {
         case textSecondary = "text_secondary"
         case cornerRadius = "corner_radius"
         case fontFamily = "font_family"
+        case fontFamilies = "font_families"
     }
 
     public init(from decoder: Decoder) throws {
@@ -147,6 +169,7 @@ public struct PaywallTheme: Codable, Sendable {
         surface = try container.decodeIfPresent(String.self, forKey: .surface) ?? "#F2F2F7"
         cornerRadius = try container.decodeIfPresent(Double.self, forKey: .cornerRadius) ?? 12
         fontFamily = try container.decodeIfPresent(String.self, forKey: .fontFamily) ?? "system"
+        fontFamilies = try container.decodeIfPresent(FontFamilies.self, forKey: .fontFamilies)
     }
 
     /// Look up a theme property by its snake_case key name.
@@ -243,6 +266,7 @@ public struct ComponentStyle: Codable, Sendable {
     public var textColor: String?
     public var cornerRadius: CodableValue?
     public var fontSize: Double?
+    public var fontFamily: String?
     public var alignment: String?
     public var opacity: Double?
     public var borderWidth: Double?
@@ -271,6 +295,7 @@ public struct ComponentStyle: Codable, Sendable {
         case textColor = "text_color"
         case cornerRadius = "corner_radius"
         case fontSize = "font_size"
+        case fontFamily = "font_family"
         case alignment
         case borderWidth = "border_width"
         case borderColor = "border_color"

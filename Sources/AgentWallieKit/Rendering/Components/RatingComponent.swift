@@ -20,18 +20,23 @@ struct RatingComponentView: View {
             ?? Color(hex: theme?.textPrimary ?? PaywallTheme.defaultTextPrimary)
     }
 
+    private var ratingFontSize: CGFloat {
+        data.style?.fontSize.map { CGFloat($0) } ?? 16
+    }
+
     var body: some View {
         HStack(spacing: 4) {
             // Numeric value
             Text(formatValue(data.props.value))
-                .font(.system(size: data.style?.fontSize ?? 16, weight: .bold))
+                .font(resolveFont(textStyle: "callout", fontSize: data.style?.fontSize, fontFamily: data.style?.fontFamily, theme: theme))
+                .fontWeight(.bold)
                 .foregroundColor(textColor)
 
             // Star icons
             HStack(spacing: 1) {
                 ForEach(0..<maxStars, id: \.self) { index in
                     starImage(for: index)
-                        .font(.system(size: (data.style?.fontSize ?? 16) * 0.85))
+                        .font(.system(size: ratingFontSize * 0.85))
                         .foregroundColor(accentColor)
                 }
             }
@@ -39,14 +44,14 @@ struct RatingComponentView: View {
             // Count
             if let count = data.props.count {
                 Text("(\(formatCount(count)))")
-                    .font(.system(size: (data.style?.fontSize ?? 16) * 0.85))
+                    .font(resolveFont(textStyle: "caption", fontSize: (data.style?.fontSize).map { $0 * 0.85 }, fontFamily: data.style?.fontFamily, theme: theme))
                     .foregroundColor(Color(hex: theme?.textSecondary ?? PaywallTheme.defaultTextSecondary))
             }
 
             // Label
             if let label = data.props.label {
                 Text(label)
-                    .font(.system(size: (data.style?.fontSize ?? 16) * 0.85))
+                    .font(resolveFont(textStyle: "caption", fontSize: (data.style?.fontSize).map { $0 * 0.85 }, fontFamily: data.style?.fontFamily, theme: theme))
                     .foregroundColor(Color(hex: theme?.textSecondary ?? PaywallTheme.defaultTextSecondary))
             }
         }

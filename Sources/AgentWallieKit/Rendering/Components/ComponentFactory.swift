@@ -1,5 +1,90 @@
 import SwiftUI
 
+// MARK: - Font Resolution
+
+/// Default point sizes for each text style.
+let defaultFontSizes: [String: CGFloat] = [
+    "largeTitle": 34, "title1": 28, "title2": 22, "title3": 20,
+    "headline": 17, "subheadline": 15,
+    "body": 17, "callout": 16,
+    "footnote": 13, "caption": 12, "caption2": 11
+]
+
+/// System Font mapping from textStyle string to SwiftUI Font.
+@available(iOS 16.0, *)
+private func systemFont(for textStyle: String?) -> Font {
+    switch textStyle {
+    case "largeTitle": return .largeTitle
+    case "title1": return .title
+    case "title2": return .title2
+    case "title3": return .title3
+    case "headline": return .headline
+    case "subheadline": return .subheadline
+    case "body": return .body
+    case "callout": return .callout
+    case "footnote": return .footnote
+    case "caption": return .caption
+    case "caption2": return .caption2
+    default: return .body
+    }
+}
+
+/// Map a textStyle to its FontFamilies category.
+func fontFamilyFromTheme(textStyle: String?, fontFamilies: FontFamilies) -> String? {
+    switch textStyle {
+    case "largeTitle", "title1", "title2", "title3":
+        return fontFamilies.display
+    case "headline", "subheadline":
+        return fontFamilies.heading
+    case "body", "callout":
+        return fontFamilies.body
+    case "footnote", "caption", "caption2":
+        return fontFamilies.mono
+    default:
+        return fontFamilies.body
+    }
+}
+
+/// Resolve a Font from textStyle, explicit fontSize, per-component fontFamily override, and theme.
+///
+/// Priority:
+/// 1. Explicit fontFamily (per-component override) + explicit fontSize → `.custom(fontFamily, size: fontSize)`
+/// 2. Explicit fontFamily only → `.custom(fontFamily, size: defaultSizeForStyle)`
+/// 3. Theme fontFamilies → map textStyle to category, use `.custom(family, size: ...)`
+/// 4. Explicit fontSize only → `.system(size: fontSize)`
+/// 5. Fallback to system font for the textStyle
+@available(iOS 16.0, *)
+func resolveFont(
+    textStyle: String?,
+    fontSize: Double?,
+    fontFamily: String?,
+    theme: PaywallTheme?
+) -> Font {
+    let style = textStyle ?? "body"
+    let defaultSize = defaultFontSizes[style] ?? 17
+
+    // 1 & 2: Per-component fontFamily override
+    if let family = fontFamily {
+        let size = fontSize.map { CGFloat($0) } ?? defaultSize
+        return .custom(family, size: size)
+    }
+
+    // 3: Theme fontFamilies
+    if let fontFamilies = theme?.fontFamilies,
+       let family = fontFamilyFromTheme(textStyle: style, fontFamilies: fontFamilies) {
+        let size = fontSize.map { CGFloat($0) } ?? defaultSize
+        return .custom(family, size: size)
+    }
+
+    // 4: Explicit fontSize only → system font at that size
+    if let fs = fontSize {
+        return .system(size: CGFloat(fs))
+    }
+
+    // 5: Fallback to system font
+    return systemFont(for: style)
+}
+
 // MARK: - Color Resolution
 
 /// Resolve a color string (hex or theme reference) to a SwiftUI Color.

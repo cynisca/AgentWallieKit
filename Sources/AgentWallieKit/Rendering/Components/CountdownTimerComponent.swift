@@ -19,11 +19,11 @@ struct CountdownTimerComponentView: View {
         VStack(spacing: 4) {
             if let label = data.props.label {
                 Text(label)
-                    .font(.caption)
+                    .font(resolveFont(textStyle: "caption", fontSize: nil, fontFamily: data.style?.fontFamily, theme: theme))
                     .foregroundColor(resolveColor(data.style?.textColor, theme: theme) ?? Color(hex: theme?.textSecondary ?? PaywallTheme.defaultTextSecondary))
             }
             Text(formattedTime)
-                .font(.system(.title2, design: .monospaced))
+                .font(resolveFont(textStyle: "title2", fontSize: data.style?.fontSize, fontFamily: data.style?.fontFamily, theme: theme))
                 .fontWeight(.bold)
                 .foregroundColor(resolveColor(data.style?.color ?? data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? PaywallTheme.defaultTextPrimary))
         }
