@@ -14,16 +14,21 @@ public struct AgentWallieOptions: Sendable {
     /// Whether to collect device attributes.
     public var collectDeviceAttributes: Bool
 
+    /// When true, the SDK listens for shake gestures and shows the debug overlay.
+    public var enableShakeDebugger: Bool
+
     public init(
         defaultPresentation: PresentationType = .modal,
         networkEnvironment: NetworkEnvironment = .production,
         logLevel: LogLevel = .warn,
-        collectDeviceAttributes: Bool = true
+        collectDeviceAttributes: Bool = true,
+        enableShakeDebugger: Bool = false
     ) {
         self.defaultPresentation = defaultPresentation
         self.networkEnvironment = networkEnvironment
         self.logLevel = logLevel
         self.collectDeviceAttributes = collectDeviceAttributes
+        self.enableShakeDebugger = enableShakeDebugger
     }
 }
 
