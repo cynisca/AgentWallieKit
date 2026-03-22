@@ -49,6 +49,8 @@ public final class AgentWallie: @unchecked Sendable {
     private var entitlementManager: EntitlementManager?
     private(set) var resolvedProducts: [ResolvedProductInfo] = []
     private var lastPrefetchedProductIds: Set<String> = []
+    private var debugProvider: DebugDataProvider?
+    private var shakeWindow: AnyObject?
 
     private init() {}
 
@@ -96,6 +98,17 @@ public final class AgentWallie: @unchecked Sendable {
         }
 
         isConfigured = true
+
+        // Initialize debug provider
+        Task { @MainActor in
+            let provider = DebugDataProvider()
+            self.debugProvider = provider
+            self.eventTracker?.debugProvider = provider
+
+            if options.enableShakeDebugger {
+                self.installShakeDetector()
+            }
+        }
 
         // Fetch config on launch
         Task {
@@ -482,6 +495,143 @@ public final class AgentWallie: @unchecked Sendable {
         )
 
         log(.info, "Resolved \(resolvedProducts.count) products for paywall rendering.")
+    }
+
+    // MARK: - Debug Overlay
+
+    /// Present the debug overlay modally.
+    @MainActor
+    public func showDebugger() {
+        guard isConfigured else {
+            log(.warn, "Cannot show debugger — SDK not configured.")
+            return
+        }
+
+        refreshDebugData()
+
+        #if canImport(UIKit)
+        guard let provider = debugProvider else { return }
+
+        let overlay = DebugOverlay(
+            provider: provider,
+            onEvaluatePlacement: { [weak self] placement in
+                self?.evaluatePlacementForDebug(placement) ?? "SDK not ready"
+            }
+        )
+
+        let hostingController = UIHostingController(rootView: overlay)
+        hostingController.modalPresentationStyle = .fullScreen
+
+        guard let windowScene = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .first,
+              let rootVC = windowScene.windows.first?.rootViewController else {
+            return
+        }
+
+        var presenter = rootVC
+        while let presented = presenter.presentedViewController {
+            presenter = presented
+        }
+        presenter.present(hostingController, animated: true)
+        #endif
+    }
+
+    /// Refresh all debug data from current SDK state.
+    @MainActor
+    private func refreshDebugData() {
+        guard let provider = debugProvider else { return }
+
+        provider.collectStatus(
+            isConfigured: isConfigured,
+            apiKey: apiKey,
+            baseURL: options?.networkEnvironment.baseURL,
+            config: configManager?.config,
+            configLoaded: configManager?.config != nil
+        )
+
+        if let userMgr = userManager {
+            provider.collectUserInfo(
+                userId: userMgr.userId,
+                deviceId: userMgr.deviceId,
+                seed: userMgr.seed,
+                attributes: userMgr.attributes,
+                subscriptionStatus: subscriptionStatus,
+                entitlements: entitlements
+            )
+        }
+
+        if let config = configManager?.config {
+            provider.collectProducts(
+                configProducts: config.products,
+                resolvedProducts: resolvedProducts
+            )
+        }
+
+        if let store = assignmentStore, let userMgr = userManager {
+            provider.collectAssignments(
+                assignmentStore: store,
+                userId: userMgr.effectiveUserId,
+                config: configManager?.config
+            )
+        }
+    }
+
+    /// Dry-run placement evaluation for the debug overlay.
+    private func evaluatePlacementForDebug(_ placement: String) -> String {
+        guard let config = configManager?.config,
+              let userMgr = userManager,
+              let store = assignmentStore else {
+            return "Config not ready"
+        }
+
+        let context = userMgr.buildContext()
+
+        let result = PlacementEvaluator.evaluate(
+            placement: placement,
+            config: config,
+            context: context,
+            userId: userMgr.effectiveUserId,
+            entitlements: entitlements,
+            assignmentStore: store
+        )
+
+        guard let result = result else {
+            return "No match — no campaign matched placement '\(placement)'"
+        }
+
+        var lines: [String] = []
+        lines.append("Campaign: \(result.campaignId)")
+        lines.append("Audience: \(result.audienceId)")
+
+        if let expId = result.experimentId {
+            lines.append("Experiment: \(expId)")
+        }
+        if let variantId = result.variantId {
+            lines.append("Variant: \(variantId)")
+        }
+        if let paywallId = result.paywallId {
+            let paywallName = config.paywalls[paywallId]?.name ?? "(unknown)"
+            lines.append("Paywall: \(paywallId) (\(paywallName))")
+        }
+        if result.isHoldout {
+            lines.append("Holdout: YES")
+        }
+
+        return lines.joined(separator: "\n")
+    }
+
+    /// Install a shake gesture detector for showing the debugger.
+    @MainActor
+    private func installShakeDetector() {
+        #if canImport(UIKit)
+        ShakeDetector.install()
+        ShakeDetector.onShake = { [weak self] in
+            Task { @MainActor in
+                self?.showDebugger()
+            }
+        }
+        #endif
     }
 
     private func ensureConfigured() {

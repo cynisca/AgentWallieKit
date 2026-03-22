@@ -15,6 +15,21 @@ public final class EventTracker: @unchecked Sendable {
     private var flushTimer: Timer?
     private var backgroundObserver: Any?
 
+    /// Debug data provider for the debug overlay. Set by AgentWallie when debug mode is active.
+    public var debugProvider: DebugDataProvider?
+
+    /// Thread-safe storage for recent events (last 50) accessible by the debug overlay.
+    private let recentEventsLock = NSLock()
+    private var _recentEvents: [AnalyticsEvent] = []
+    private let maxRecentEvents = 50
+
+    /// Returns a snapshot of recent events (last 50). Thread-safe.
+    public var recentEvents: [AnalyticsEvent] {
+        recentEventsLock.lock()
+        defer { recentEventsLock.unlock() }
+        return _recentEvents
+    }
+
     public init(apiClient: APIClient, userManager: UserManager, flushInterval: TimeInterval = 30) {
         self.apiClient = apiClient
         self.userManager = userManager
@@ -42,6 +57,17 @@ public final class EventTracker: @unchecked Sendable {
             campaignId: campaignId,
             paywallId: paywallId
         )
+
+        // Store in recent events buffer for debug overlay
+        recentEventsLock.lock()
+        _recentEvents.append(event)
+        if _recentEvents.count > maxRecentEvents {
+            _recentEvents.removeFirst(_recentEvents.count - maxRecentEvents)
+        }
+        recentEventsLock.unlock()
+
+        // Notify debug provider if attached
+        debugProvider?.recordEvent(name: name, properties: properties)
 
         queue.async(flags: .barrier) { [weak self] in
             self?.eventQueue.append(event)
