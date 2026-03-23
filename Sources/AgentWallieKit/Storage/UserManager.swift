@@ -101,6 +101,11 @@ public final class UserManager: @unchecked Sendable {
             "os_version": ProcessInfo.processInfo.operatingSystemVersionString,
         ]
 
+        // Top-level aliases for common filter fields so both "platform"
+        // and "device.platform" work in audience filters.
+        ctx["platform"] = "ios"
+        ctx["os_version"] = ProcessInfo.processInfo.operatingSystemVersionString
+
         if let params = eventParams {
             ctx["event"] = ["params": params]
         }
