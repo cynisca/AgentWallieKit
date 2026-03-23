@@ -787,7 +787,7 @@ public struct StackComponentData: Codable, Sendable {
     public let condition: ComponentCondition?
     public let animation: ComponentAnimation?
 
-    public init(id: String, props: StackProps, children: [PaywallComponent], style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
+    public init(id: String, props: StackProps, children: [PaywallComponent] = [], style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "stack"
         self.id = id
         self.props = props
@@ -795,6 +795,21 @@ public struct StackComponentData: Codable, Sendable {
         self.style = style
         self.condition = condition
         self.animation = animation
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        type = try container.decodeIfPresent(String.self, forKey: .type) ?? "stack"
+        id = try container.decode(String.self, forKey: .id)
+        props = try container.decode(StackProps.self, forKey: .props)
+        children = try container.decodeIfPresent([PaywallComponent].self, forKey: .children) ?? []
+        style = try container.decodeIfPresent(ComponentStyle.self, forKey: .style)
+        condition = try container.decodeIfPresent(ComponentCondition.self, forKey: .condition)
+        animation = try container.decodeIfPresent(ComponentAnimation.self, forKey: .animation)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case type, id, props, children, style, condition, animation
     }
 
     public struct StackProps: Codable, Sendable {
@@ -892,7 +907,7 @@ public struct DrawerComponentData: Codable, Sendable {
     public let condition: ComponentCondition?
     public let animation: ComponentAnimation?
 
-    public init(id: String, props: DrawerProps, children: [PaywallComponent], style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
+    public init(id: String, props: DrawerProps, children: [PaywallComponent] = [], style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "drawer"
         self.id = id
         self.props = props
@@ -900,6 +915,21 @@ public struct DrawerComponentData: Codable, Sendable {
         self.style = style
         self.condition = condition
         self.animation = animation
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        type = try container.decodeIfPresent(String.self, forKey: .type) ?? "drawer"
+        id = try container.decode(String.self, forKey: .id)
+        props = try container.decode(DrawerProps.self, forKey: .props)
+        children = try container.decodeIfPresent([PaywallComponent].self, forKey: .children) ?? []
+        style = try container.decodeIfPresent(ComponentStyle.self, forKey: .style)
+        condition = try container.decodeIfPresent(ComponentCondition.self, forKey: .condition)
+        animation = try container.decodeIfPresent(ComponentAnimation.self, forKey: .animation)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case type, id, props, children, style, condition, animation
     }
 
     public struct DrawerProps: Codable, Sendable {
@@ -924,7 +954,7 @@ public struct CarouselComponentData: Codable, Sendable {
     public let condition: ComponentCondition?
     public let animation: ComponentAnimation?
 
-    public init(id: String, props: CarouselProps, children: [PaywallComponent], style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
+    public init(id: String, props: CarouselProps, children: [PaywallComponent] = [], style: ComponentStyle? = nil, condition: ComponentCondition? = nil, animation: ComponentAnimation? = nil) {
         self.type = "carousel"
         self.id = id
         self.props = props
@@ -932,6 +962,21 @@ public struct CarouselComponentData: Codable, Sendable {
         self.style = style
         self.condition = condition
         self.animation = animation
+    }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        type = try container.decodeIfPresent(String.self, forKey: .type) ?? "carousel"
+        id = try container.decode(String.self, forKey: .id)
+        props = try container.decode(CarouselProps.self, forKey: .props)
+        children = try container.decodeIfPresent([PaywallComponent].self, forKey: .children) ?? []
+        style = try container.decodeIfPresent(ComponentStyle.self, forKey: .style)
+        condition = try container.decodeIfPresent(ComponentCondition.self, forKey: .condition)
+        animation = try container.decodeIfPresent(ComponentAnimation.self, forKey: .animation)
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case type, id, props, children, style, condition, animation
     }
 
     public struct CarouselProps: Codable, Sendable {

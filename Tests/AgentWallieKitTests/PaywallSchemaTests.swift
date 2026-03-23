@@ -212,6 +212,42 @@ final class PaywallSchemaTests: XCTestCase {
         }
     }
 
+    func testStackComponentDecodesWithoutChildren() throws {
+        let json = """
+        {"type":"stack","id":"s1","props":{"direction":"horizontal"}}
+        """.data(using: .utf8)!
+        let component = try JSONDecoder().decode(PaywallComponent.self, from: json)
+        if case .stack(let d) = component {
+            XCTAssertEqual(d.children.count, 0)
+        } else {
+            XCTFail("Expected stack")
+        }
+    }
+
+    func testCarouselDecodesWithoutChildren() throws {
+        let json = """
+        {"type":"carousel","id":"c1","props":{"auto_scroll":false,"interval_ms":3000}}
+        """.data(using: .utf8)!
+        let component = try JSONDecoder().decode(PaywallComponent.self, from: json)
+        if case .carousel(let d) = component {
+            XCTAssertEqual(d.children.count, 0)
+        } else {
+            XCTFail("Expected carousel")
+        }
+    }
+
+    func testDrawerDecodesWithoutChildren() throws {
+        let json = """
+        {"type":"drawer","id":"d1","props":{"title":"Info","expanded":true}}
+        """.data(using: .utf8)!
+        let component = try JSONDecoder().decode(PaywallComponent.self, from: json)
+        if case .drawer(let d) = component {
+            XCTAssertEqual(d.children.count, 0)
+        } else {
+            XCTFail("Expected drawer")
+        }
+    }
+
     // MARK: - CountdownTimerComponentData
 
     func testCountdownTimerComponentRoundTrip() throws {
