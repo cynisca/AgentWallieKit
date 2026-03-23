@@ -35,16 +35,6 @@ public struct PlacementResult: Sendable {
 /// 4. Return the paywall to show, or nil for holdout / no match
 public enum PlacementEvaluator {
 
-    /// Evaluate a placement and return the result.
-    ///
-    /// - Parameters:
-    ///   - placement: The placement name (e.g. "caffeineLogged")
-    ///   - config: The compiled SDK config
-    ///   - context: User/device/event context for filter evaluation
-    ///   - userId: Current user ID for experiment assignment
-    ///   - entitlements: Current user entitlements
-    ///   - assignmentStore: Persisted experiment assignments
-    /// - Returns: The placement result, or nil if no campaign/audience matches
     public static func evaluate(
         placement: String,
         config: SDKConfig,
@@ -53,33 +43,38 @@ public enum PlacementEvaluator {
         entitlements: Set<String>,
         assignmentStore: AssignmentStore
     ) -> PlacementResult? {
-        // Iterate active campaigns
+        #if DEBUG
+        var campaignsChecked = 0
+        var campaignsWithPlacement = 0
+        #endif
+
         for campaign in config.campaigns {
             guard campaign.status == .active else { continue }
+            #if DEBUG
+            campaignsChecked += 1
+            #endif
 
-            // Check if this campaign has the placement active
             let hasPlacement = campaign.placements.contains { p in
                 p.name == placement && p.status == .active
             }
             guard hasPlacement else { continue }
+            #if DEBUG
+            campaignsWithPlacement += 1
+            #endif
 
-            // Evaluate audiences top-to-bottom by priority
             let sortedAudiences = campaign.audiences.sorted { $0.priorityOrder < $1.priorityOrder }
 
             for audience in sortedAudiences {
-                // Check entitlement skip
                 if let entitlementCheck = audience.entitlementCheck,
                    entitlements.contains(entitlementCheck) {
                     continue
                 }
 
-                // Evaluate audience filters
                 let matches = FilterEngine.evaluate(filters: audience.filters, context: context)
                 guard matches else { continue }
 
-                // Audience matched — check experiment
-                guard let experiment = audience.experiment, experiment.status == .running else {
-                    // No experiment — no paywall to show for this audience
+                guard let experiment = audience.experiment else {
+                    log(.warn, "Audience '\(audience.name)' matched but has no experiment — no paywall to show")
                     return PlacementResult(
                         campaignId: campaign.id,
                         audienceId: audience.id,
@@ -87,7 +82,15 @@ public enum PlacementEvaluator {
                     )
                 }
 
-                // Check for persisted assignment first
+                guard experiment.status == .running else {
+                    log(.warn, "Audience '\(audience.name)' matched but experiment status is '\(experiment.status)' — no paywall to show")
+                    return PlacementResult(
+                        campaignId: campaign.id,
+                        audienceId: audience.id,
+                        isHoldout: false
+                    )
+                }
+
                 if let persisted = assignmentStore.getAssignment(
                     userId: userId,
                     experimentId: experiment.id
@@ -110,7 +113,6 @@ public enum PlacementEvaluator {
                     )
                 }
 
-                // Assign variant
                 let assignment = ExperimentAssignment.assignVariant(
                     userId: userId,
                     experimentId: experiment.id,
@@ -118,7 +120,6 @@ public enum PlacementEvaluator {
                     holdoutPercentage: experiment.holdoutPercentage
                 )
 
-                // Persist assignment
                 let stored = StoredAssignment(
                     variantId: assignment?.variantId,
                     paywallId: assignment?.paywallId,
@@ -150,6 +151,18 @@ public enum PlacementEvaluator {
             }
         }
 
+        #if DEBUG
+        log(.warn, "No match for placement '\(placement)': checked \(campaignsChecked) active campaigns, \(campaignsWithPlacement) had this placement")
+        #endif
         return nil
+    }
+
+    /// @autoclosure defers string interpolation until after the level check
+    private static func log(_ level: LogLevel, _ message: @autoclosure () -> String) {
+        #if DEBUG
+        if level >= .warn {
+            print("[AgentWallie] [\(level)] [PlacementEvaluator] \(message())")
+        }
+        #endif
     }
 }

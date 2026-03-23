@@ -380,4 +380,177 @@ final class CampaignModelTests: XCTestCase {
         XCTAssertEqual(campaign.audiences[0].entitlementCheck, "pro")
         XCTAssertEqual(campaign.audiences[0].frequencyCap?.type, .oncePerSession)
     }
+
+    // MARK: - FrequencyCap string decoding (legacy API format)
+
+    func testFrequencyCapDecodesFromString() throws {
+        let json = """
+        {
+            "id": "a1",
+            "name": "All",
+            "priority_order": 0,
+            "filters": [],
+            "frequency_cap": "once_per_session"
+        }
+        """
+        let data = json.data(using: .utf8)!
+        let audience = try JSONDecoder().decode(Audience.self, from: data)
+        XCTAssertEqual(audience.frequencyCap?.type, .oncePerSession)
+        XCTAssertNil(audience.frequencyCap?.limit)
+    }
+
+    func testFrequencyCapDecodesFromObjectWithLimit() throws {
+        let json = """
+        {
+            "id": "a1",
+            "name": "All",
+            "priority_order": 0,
+            "filters": [],
+            "frequency_cap": {"type": "n_times_total", "limit": 3}
+        }
+        """
+        let data = json.data(using: .utf8)!
+        let audience = try JSONDecoder().decode(Audience.self, from: data)
+        XCTAssertEqual(audience.frequencyCap?.type, .nTimesTotal)
+        XCTAssertEqual(audience.frequencyCap?.limit, 3)
+    }
+
+    func testFrequencyCapDecodesNullGracefully() throws {
+        let json = """
+        {
+            "id": "a1",
+            "name": "All",
+            "priority_order": 0,
+            "filters": [],
+            "frequency_cap": null
+        }
+        """
+        let data = json.data(using: .utf8)!
+        let audience = try JSONDecoder().decode(Audience.self, from: data)
+        XCTAssertNil(audience.frequencyCap)
+    }
+
+    // MARK: - Full config JSON matching API response format
+
+    func testFullConfigDecodesFromAPIFormat() throws {
+        // Simulates the JSON the config compiler sends after the fix
+        let json = """
+        {
+            "campaigns": [{
+                "id": "c1",
+                "name": "Main Campaign",
+                "status": "active",
+                "placements": [
+                    {"id": "p1", "name": "rescan", "type": "custom", "status": "active"}
+                ],
+                "audiences": [{
+                    "id": "a1",
+                    "name": "iOS Users",
+                    "priority_order": 0,
+                    "entitlement_check": null,
+                    "frequency_cap": null,
+                    "filters": [
+                        {"field": "device.platform", "operator": "is", "value": "ios", "conjunction": "and"}
+                    ],
+                    "experiment": {
+                        "id": "e1",
+                        "status": "running",
+                        "holdout_percentage": 0,
+                        "variants": [
+                            {"id": "v1", "paywall_id": "pw1", "traffic_percentage": 100}
+                        ]
+                    }
+                }]
+            }],
+            "paywalls": {
+                "pw1": {
+                    "version": "1.0",
+                    "name": "Main Paywall",
+                    "settings": {
+                        "presentation": "modal",
+                        "close_button": true,
+                        "close_button_delay_ms": 0,
+                        "background_color": "#FFFFFF",
+                        "scroll_enabled": true,
+                        "safe_area_insets": true
+                    },
+                    "components": []
+                }
+            },
+            "products": []
+        }
+        """
+        let data = json.data(using: .utf8)!
+        let config = try JSONDecoder().decode(SDKConfig.self, from: data)
+        XCTAssertEqual(config.campaigns.count, 1)
+        XCTAssertEqual(config.campaigns[0].placements[0].name, "rescan")
+        XCTAssertEqual(config.campaigns[0].audiences[0].filters[0].field, "device.platform")
+
+        // Verify the filter value is properly typed
+        if case .string(let val) = config.campaigns[0].audiences[0].filters[0].value {
+            XCTAssertEqual(val, "ios")
+        } else {
+            XCTFail("Expected string filter value")
+        }
+
+        XCTAssertEqual(config.campaigns[0].audiences[0].experiment?.status, .running)
+        XCTAssertEqual(config.paywalls["pw1"]?.name, "Main Paywall")
+    }
+
+    func testConfigWithNumericFilterValue() throws {
+        let json = """
+        {
+            "campaigns": [{
+                "id": "c1",
+                "name": "Test",
+                "status": "active",
+                "placements": [],
+                "audiences": [{
+                    "id": "a1",
+                    "name": "High Seed",
+                    "priority_order": 0,
+                    "filters": [
+                        {"field": "user.seed", "operator": "gte", "value": 50, "conjunction": "and"}
+                    ]
+                }]
+            }],
+            "paywalls": {},
+            "products": []
+        }
+        """
+        let data = json.data(using: .utf8)!
+        let config = try JSONDecoder().decode(SDKConfig.self, from: data)
+        let filterValue = config.campaigns[0].audiences[0].filters[0].value
+        // After config compiler fix, numeric values come as JSON numbers, not strings
+        XCTAssertNotNil(filterValue.doubleValue, "Numeric filter value should have a doubleValue")
+        XCTAssertEqual(filterValue.doubleValue, 50.0)
+    }
+
+    func testConfigWithArrayFilterValue() throws {
+        let json = """
+        {
+            "campaigns": [{
+                "id": "c1",
+                "name": "Test",
+                "status": "active",
+                "placements": [],
+                "audiences": [{
+                    "id": "a1",
+                    "name": "US/CA Users",
+                    "priority_order": 0,
+                    "filters": [
+                        {"field": "user.country", "operator": "in", "value": ["US", "CA"], "conjunction": "and"}
+                    ]
+                }]
+            }],
+            "paywalls": {},
+            "products": []
+        }
+        """
+        let data = json.data(using: .utf8)!
+        let config = try JSONDecoder().decode(SDKConfig.self, from: data)
+        let filterValue = config.campaigns[0].audiences[0].filters[0].value
+        // After config compiler fix, array values come as JSON arrays, not strings
+        XCTAssertEqual(filterValue.arrayValue, ["US", "CA"])
+    }
 }

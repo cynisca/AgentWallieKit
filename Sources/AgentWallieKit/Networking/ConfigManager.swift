@@ -37,7 +37,11 @@ public final class ConfigManager: @unchecked Sendable {
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: UInt64((self?.refreshInterval ?? 300) * 1_000_000_000))
                 guard !Task.isCancelled else { break }
-                try? await self?.fetchConfig()
+                do {
+                    try await self?.fetchConfig()
+                } catch {
+                    Self.log(.error, "Config refresh failed: \(error)")
+                }
             }
         }
     }
@@ -52,12 +56,24 @@ public final class ConfigManager: @unchecked Sendable {
 
     private func loadCachedConfig() {
         guard let data = defaults.data(forKey: cacheKey) else { return }
-        config = try? JSONDecoder().decode(SDKConfig.self, from: data)
+        do {
+            config = try JSONDecoder().decode(SDKConfig.self, from: data)
+        } catch {
+            Self.log(.error, "Failed to decode cached config: \(error)")
+            // Clear corrupt cache so we don't keep failing
+            defaults.removeObject(forKey: cacheKey)
+        }
     }
 
     private func cacheConfig(_ config: SDKConfig) {
         guard let data = try? JSONEncoder().encode(config) else { return }
         defaults.set(data, forKey: cacheKey)
+    }
+
+    private static func log(_ level: LogLevel, _ message: String) {
+        #if DEBUG
+        print("[AgentWallie] [\(level)] \(message)")
+        #endif
     }
 
     deinit {
