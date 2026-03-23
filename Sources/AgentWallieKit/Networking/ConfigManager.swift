@@ -71,9 +71,7 @@ public final class ConfigManager: @unchecked Sendable {
     }
 
     private static func log(_ level: LogLevel, _ message: String) {
-        #if DEBUG
-        print("[AgentWallie] [\(level)] \(message)")
-        #endif
+        AWLogger.log(level, message)
     }
 
     deinit {

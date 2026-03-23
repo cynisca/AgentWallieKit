@@ -26,12 +26,9 @@ public final class APIClient: @unchecked Sendable {
         do {
             return try decoder.decode(SDKConfig.self, from: data)
         } catch {
-            #if DEBUG
-            // Log the raw JSON (truncated) and the decode error for debugging
             let preview = String(data: data.prefix(500), encoding: .utf8) ?? "(binary)"
-            print("[AgentWallie] [error] Config decode failed. Response preview: \(preview)...")
-            print("[AgentWallie] [error] Decode error: \(error)")
-            #endif
+            AWLogger.log(.error, "Config decode failed. Preview: \(preview)...")
+            AWLogger.log(.error, "Decode error: \(error)")
             throw APIError.decodingError(error)
         }
     }

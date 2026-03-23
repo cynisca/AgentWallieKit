@@ -157,12 +157,7 @@ public enum PlacementEvaluator {
         return nil
     }
 
-    /// @autoclosure defers string interpolation until after the level check
     private static func log(_ level: LogLevel, _ message: @autoclosure () -> String) {
-        #if DEBUG
-        if level >= .warn {
-            print("[AgentWallie] [\(level)] [PlacementEvaluator] \(message())")
-        }
-        #endif
+        AWLogger.log(level, message())
     }
 }

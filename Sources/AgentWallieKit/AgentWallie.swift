@@ -20,7 +20,9 @@ public final class AgentWallie: @unchecked Sendable {
     // MARK: - Public Properties
 
     /// Delegate for receiving SDK lifecycle events.
-    public weak var delegate: AgentWallieDelegate?
+    public weak var delegate: AgentWallieDelegate? {
+        didSet { AWLogger.configure(logLevel: options?.logLevel ?? .warn, delegate: delegate) }
+    }
 
     /// The current subscription status. Set this manually or let StoreKitManager update it.
     public var subscriptionStatus: SubscriptionStatus = .unknown
@@ -69,6 +71,8 @@ public final class AgentWallie: @unchecked Sendable {
 
         self.apiKey = apiKey
         self.options = options
+
+        AWLogger.configure(logLevel: options.logLevel, delegate: delegate)
 
         let baseURL = options.networkEnvironment.baseURL
         apiClient = APIClient(apiKey: apiKey, baseURL: baseURL)
@@ -641,11 +645,7 @@ public final class AgentWallie: @unchecked Sendable {
     }
 
     private func log(_ level: LogLevel, _ message: String) {
-        guard let options = options, level >= options.logLevel else { return }
-        delegate?.handleLog(level: level, message: message)
-        #if DEBUG
-        print("[AgentWallie] [\(level)] \(message)")
-        #endif
+        AWLogger.log(level, message)
     }
 
     // MARK: - Custom View Registration
