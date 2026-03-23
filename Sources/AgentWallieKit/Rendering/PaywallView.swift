@@ -56,6 +56,7 @@ public struct PaywallView: View {
                             .foregroundColor(closeButtonForeground)
                             .padding(16)
                     }
+                    .accessibilityIdentifier("paywall-close-button")
                 } else {
                     Button(action: { onDismiss() }) {
                         Image(systemName: "xmark")
@@ -66,6 +67,7 @@ public struct PaywallView: View {
                             .clipShape(Circle())
                             .padding(16)
                     }
+                    .accessibilityIdentifier("paywall-close-button")
                 }
             }
         }
