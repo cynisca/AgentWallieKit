@@ -271,6 +271,7 @@ extension View {
             self.overlay(
                 RoundedRectangle(cornerRadius: cornerRadius)
                     .stroke(color, lineWidth: CGFloat(width))
+                    .allowsHitTesting(false)
             )
         } else {
             self

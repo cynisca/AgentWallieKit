@@ -37,6 +37,8 @@ struct CTAButtonComponentView: View {
             .background(resolveColor(data.style?.backgroundColor, theme: theme) ?? Color(hex: theme?.primary ?? PaywallTheme.defaultPrimary))
             .cornerRadius(cornerRadius)
         }
+        .buttonStyle(.plain)
+        .contentShape(Rectangle())
         .modifier(StyleModifier(style: data.style, theme: theme, skipBackground: true, skipCornerRadius: true, skipHeight: true))
     }
 
