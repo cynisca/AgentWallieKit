@@ -346,6 +346,7 @@ public enum CodableValue: Codable, Sendable, Equatable {
 // MARK: - Tap Behavior
 
 public enum TapBehavior: String, Codable, Sendable {
+    case none
     case purchase
     case selectProduct = "select_product"
     case restore
