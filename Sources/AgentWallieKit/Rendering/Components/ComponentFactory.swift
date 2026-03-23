@@ -171,13 +171,15 @@ struct StyleModifier: ViewModifier {
     var skipBackground: Bool = false
     var skipCornerRadius: Bool = false
     var skipHeight: Bool = false
+    var skipPaddingVertical: Bool = false
 
-    init(style: ComponentStyle?, theme: PaywallTheme? = nil, skipBackground: Bool = false, skipCornerRadius: Bool = false, skipHeight: Bool = false) {
+    init(style: ComponentStyle?, theme: PaywallTheme? = nil, skipBackground: Bool = false, skipCornerRadius: Bool = false, skipHeight: Bool = false, skipPaddingVertical: Bool = false) {
         self.style = style
         self.theme = theme
         self.skipBackground = skipBackground
         self.skipCornerRadius = skipCornerRadius
         self.skipHeight = skipHeight
+        self.skipPaddingVertical = skipPaddingVertical
     }
 
     func body(content: Content) -> some View {
@@ -186,7 +188,9 @@ struct StyleModifier: ViewModifier {
             .padding(.bottom, CGFloat(style?.paddingBottom ?? 0))
             .padding(.leading, CGFloat(style?.paddingLeft ?? style?.paddingHorizontal ?? 0))
             .padding(.trailing, CGFloat(style?.paddingRight ?? style?.paddingHorizontal ?? 0))
-            .padding(.vertical, CGFloat(style?.paddingVertical ?? 0))
+            .applyIf(!skipPaddingVertical) { view in
+                view.padding(.vertical, CGFloat(style?.paddingVertical ?? 0))
+            }
             .applyIf(!skipHeight) { view in
                 view.applyOptionalFrame(height: style?.height?.doubleValue.map { CGFloat($0) })
             }
