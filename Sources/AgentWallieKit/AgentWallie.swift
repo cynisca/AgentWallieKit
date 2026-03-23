@@ -21,7 +21,7 @@ public final class AgentWallie: @unchecked Sendable {
 
     /// Delegate for receiving SDK lifecycle events.
     public weak var delegate: AgentWallieDelegate? {
-        didSet { AWLogger.configure(logLevel: options?.logLevel ?? .warn, delegate: delegate) }
+        didSet { AWLogger.delegate = delegate }
     }
 
     /// The current subscription status. Set this manually or let StoreKitManager update it.

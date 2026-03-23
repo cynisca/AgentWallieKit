@@ -4,7 +4,7 @@ import Foundation
 /// Routes messages through the user's configured logLevel and delegate.
 enum AWLogger {
     private(set) static var logLevel: LogLevel = .warn
-    private(set) static weak var delegate: AgentWallieDelegate?
+    static weak var delegate: AgentWallieDelegate?
 
     static func configure(logLevel: LogLevel, delegate: AgentWallieDelegate?) {
         self.logLevel = logLevel
