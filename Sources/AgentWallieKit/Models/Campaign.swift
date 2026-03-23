@@ -217,6 +217,30 @@ public struct FrequencyCap: Codable, Sendable {
         self.type = type
         self.limit = limit
     }
+
+    public init(from decoder: Decoder) throws {
+        // Handle both object format {"type":"once_per_session","limit":3}
+        // and legacy string format "once_per_session"
+        if let container = try? decoder.container(keyedBy: CodingKeys.self) {
+            self.type = try container.decode(FrequencyCapType.self, forKey: .type)
+            self.limit = try container.decodeIfPresent(Int.self, forKey: .limit)
+        } else {
+            let single = try decoder.singleValueContainer()
+            let raw = try single.decode(String.self)
+            guard let parsed = FrequencyCapType(rawValue: raw) else {
+                throw DecodingError.dataCorruptedError(
+                    in: single,
+                    debugDescription: "Unknown frequency cap type: \(raw)"
+                )
+            }
+            self.type = parsed
+            self.limit = nil
+        }
+    }
+
+    enum CodingKeys: String, CodingKey {
+        case type, limit
+    }
 }
 
 public enum FrequencyCapType: String, Codable, Sendable {

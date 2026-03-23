@@ -23,7 +23,17 @@ public final class APIClient: @unchecked Sendable {
         try validateResponse(response)
 
         let decoder = JSONDecoder()
-        return try decoder.decode(SDKConfig.self, from: data)
+        do {
+            return try decoder.decode(SDKConfig.self, from: data)
+        } catch {
+            #if DEBUG
+            // Log the raw JSON (truncated) and the decode error for debugging
+            let preview = String(data: data.prefix(500), encoding: .utf8) ?? "(binary)"
+            print("[AgentWallie] [error] Config decode failed. Response preview: \(preview)...")
+            print("[AgentWallie] [error] Decode error: \(error)")
+            #endif
+            throw APIError.decodingError(error)
+        }
     }
 
     /// Post analytics events to the backend.
