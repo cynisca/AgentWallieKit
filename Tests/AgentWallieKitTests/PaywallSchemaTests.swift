@@ -520,7 +520,7 @@ final class PaywallSchemaTests: XCTestCase {
 
     func testTapBehaviorAllCases() throws {
         let cases: [TapBehavior] = [
-            .purchase, .selectProduct, .restore, .close,
+            .none, .purchase, .selectProduct, .restore, .close,
             .openUrl, .customAction, .customPlacement, .navigatePage, .requestReview
         ]
         for tb in cases {
@@ -530,12 +530,39 @@ final class PaywallSchemaTests: XCTestCase {
     }
 
     func testTapBehaviorRawValues() {
+        XCTAssertEqual(TapBehavior.none.rawValue, "none")
         XCTAssertEqual(TapBehavior.selectProduct.rawValue, "select_product")
         XCTAssertEqual(TapBehavior.openUrl.rawValue, "open_url")
         XCTAssertEqual(TapBehavior.customAction.rawValue, "custom_action")
         XCTAssertEqual(TapBehavior.customPlacement.rawValue, "custom_placement")
         XCTAssertEqual(TapBehavior.navigatePage.rawValue, "navigate_page")
         XCTAssertEqual(TapBehavior.requestReview.rawValue, "request_review")
+    }
+
+    func testLinkRowWithNoneActionDecodesFromJSON() throws {
+        let json = """
+        {
+            "type": "link_row",
+            "id": "footer",
+            "props": {
+                "links": [
+                    {"text": "3-day trial", "action": "none"},
+                    {"text": "$29.99/yr", "action": "none"},
+                    {"text": "Restore Purchase", "action": "restore"}
+                ],
+                "separator": " · "
+            }
+        }
+        """.data(using: .utf8)!
+        let component = try JSONDecoder().decode(PaywallComponent.self, from: json)
+        if case .linkRow(let d) = component {
+            XCTAssertEqual(d.props.links.count, 3)
+            XCTAssertEqual(d.props.links[0].action, .none)
+            XCTAssertEqual(d.props.links[1].action, .none)
+            XCTAssertEqual(d.props.links[2].action, .restore)
+        } else {
+            XCTFail("Expected link_row component")
+        }
     }
 
     // MARK: - CodableValue
