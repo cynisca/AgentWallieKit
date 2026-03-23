@@ -58,7 +58,7 @@ struct CTAButtonComponentView: View {
 func resolveActionParam(for props: CTAButtonComponentData.CTAButtonProps) -> String? {
     switch props.action {
     case .purchase, .selectProduct:
-        return props.product
+        return props.product ?? "selected"
     case .customAction:
         return props.actionName
     case .customPlacement:

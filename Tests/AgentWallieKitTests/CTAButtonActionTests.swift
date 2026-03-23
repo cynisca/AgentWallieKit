@@ -23,6 +23,15 @@ final class CTAButtonActionTests: XCTestCase {
         XCTAssertEqual(resolveActionParam(for: props), "primary")
     }
 
+    func testPurchaseAction_withNoProduct_defaultsToSelected() {
+        let props = CTAButtonComponentData.CTAButtonProps(
+            text: "REVEAL MY VERDICT — 3 DAYS FREE",
+            action: .purchase
+        )
+        XCTAssertEqual(resolveActionParam(for: props), "selected",
+            "purchase with no product should default to 'selected'")
+    }
+
     func testCustomAction_passesActionName() {
         let props = CTAButtonComponentData.CTAButtonProps(
             text: "Invite 2 friends to unlock for free",
