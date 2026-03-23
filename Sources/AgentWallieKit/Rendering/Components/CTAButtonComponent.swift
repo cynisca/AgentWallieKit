@@ -20,7 +20,7 @@ struct CTAButtonComponentView: View {
     }
 
     var body: some View {
-        Button(action: { onAction(data.props.action, data.props.product) }) {
+        Button(action: { onAction(data.props.action, resolveActionParam(for: data.props)) }) {
             VStack(spacing: 4) {
                 Text(resolvedText)
                     .font(resolveFont(textStyle: "headline", fontSize: data.style?.fontSize, fontFamily: data.style?.fontFamily, theme: theme))
@@ -45,5 +45,27 @@ struct CTAButtonComponentView: View {
             return CGFloat(cr)
         }
         return CGFloat(theme?.cornerRadius ?? 12)
+    }
+}
+
+/// Resolves the parameter to pass to `onAction` based on the button's action type.
+///
+/// - purchase / selectProduct → product slot name
+/// - customAction → actionName
+/// - customPlacement → placementName
+/// - openUrl → url
+/// - all others → nil
+func resolveActionParam(for props: CTAButtonComponentData.CTAButtonProps) -> String? {
+    switch props.action {
+    case .purchase, .selectProduct:
+        return props.product
+    case .customAction:
+        return props.actionName
+    case .customPlacement:
+        return props.placementName
+    case .openUrl:
+        return props.url
+    default:
+        return nil
     }
 }
