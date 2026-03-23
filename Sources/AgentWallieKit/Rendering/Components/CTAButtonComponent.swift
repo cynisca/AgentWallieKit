@@ -20,25 +20,25 @@ struct CTAButtonComponentView: View {
     }
 
     var body: some View {
-        Button(action: { onAction(data.props.action, resolveActionParam(for: data.props)) }) {
-            VStack(spacing: 4) {
-                Text(resolvedText)
-                    .font(resolveFont(textStyle: "headline", fontSize: data.style?.fontSize, fontFamily: data.style?.fontFamily, theme: theme))
-                    .foregroundColor(resolveColor(data.style?.textColor, theme: theme) ?? .white)
+        VStack(spacing: 4) {
+            Text(resolvedText)
+                .font(resolveFont(textStyle: "headline", fontSize: data.style?.fontSize, fontFamily: data.style?.fontFamily, theme: theme))
+                .foregroundColor(resolveColor(data.style?.textColor, theme: theme) ?? .white)
 
-                if let subtitle = resolvedSubtitle {
-                    Text(subtitle)
-                        .font(resolveFont(textStyle: "subheadline", fontSize: nil, fontFamily: data.style?.fontFamily, theme: theme))
-                        .foregroundColor((resolveColor(data.style?.textColor, theme: theme) ?? .white).opacity(0.8))
-                }
+            if let subtitle = resolvedSubtitle {
+                Text(subtitle)
+                    .font(resolveFont(textStyle: "subheadline", fontSize: nil, fontFamily: data.style?.fontFamily, theme: theme))
+                    .foregroundColor((resolveColor(data.style?.textColor, theme: theme) ?? .white).opacity(0.8))
             }
-            .frame(maxWidth: .infinity)
-            .frame(height: data.style?.height?.doubleValue.map { CGFloat($0) } ?? 56)
-            .background(resolveColor(data.style?.backgroundColor, theme: theme) ?? Color(hex: theme?.primary ?? PaywallTheme.defaultPrimary))
-            .cornerRadius(cornerRadius)
         }
-        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity)
+        .frame(height: data.style?.height?.doubleValue.map { CGFloat($0) } ?? 56)
+        .background(resolveColor(data.style?.backgroundColor, theme: theme) ?? Color(hex: theme?.primary ?? PaywallTheme.defaultPrimary))
+        .cornerRadius(cornerRadius)
         .contentShape(Rectangle())
+        .onTapGesture {
+            onAction(data.props.action, resolveActionParam(for: data.props))
+        }
         .modifier(StyleModifier(style: data.style, theme: theme, skipBackground: true, skipCornerRadius: true, skipHeight: true))
     }
 
