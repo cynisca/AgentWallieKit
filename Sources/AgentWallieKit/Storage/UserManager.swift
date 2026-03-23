@@ -95,16 +95,17 @@ public final class UserManager: @unchecked Sendable {
             "seed": seed,
         ].merging(attributes) { _, new in new }
 
+        let osVersion = ProcessInfo.processInfo.operatingSystemVersionString
+
         ctx["device"] = [
             "id": deviceId,
             "platform": "ios",
-            "os_version": ProcessInfo.processInfo.operatingSystemVersionString,
+            "os_version": osVersion,
         ]
 
-        // Top-level aliases for common filter fields so both "platform"
-        // and "device.platform" work in audience filters.
+        // Top-level aliases so both "platform" and "device.platform" work in audience filters
         ctx["platform"] = "ios"
-        ctx["os_version"] = ProcessInfo.processInfo.operatingSystemVersionString
+        ctx["os_version"] = osVersion
 
         if let params = eventParams {
             ctx["event"] = ["params": params]
