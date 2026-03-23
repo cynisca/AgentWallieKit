@@ -101,6 +101,17 @@ final class CTAButtonActionTests: XCTestCase {
 
     // MARK: - CTA button view onAction wiring
 
+    func testResolveActionParam_withPaddingVerticalStyle() {
+        // Reproduces CutOrBulk's CTA style: padding_vertical but no height
+        let props = CTAButtonComponentData.CTAButtonProps(
+            text: "REVEAL MY VERDICT — 3 DAYS FREE",
+            action: .purchase
+        )
+        let param = resolveActionParam(for: props)
+        XCTAssertEqual(param, "selected",
+            "purchase with no product should default to 'selected' regardless of styling")
+    }
+
     func testCTAButtonView_usesResolveActionParam() {
         // Regression: the view previously passed data.props.product for ALL
         // action types, so custom_action buttons with actionName but no product
