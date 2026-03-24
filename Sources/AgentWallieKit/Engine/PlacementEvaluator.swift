@@ -74,7 +74,7 @@ public enum PlacementEvaluator {
                 guard matches else { continue }
 
                 guard let experiment = audience.experiment else {
-                    log(.warn, "Audience '\(audience.name)' matched but has no experiment — no paywall to show")
+                    AWLogger.log(.warn, "Audience '\(audience.name)' matched but has no experiment — no paywall to show")
                     return PlacementResult(
                         campaignId: campaign.id,
                         audienceId: audience.id,
@@ -83,7 +83,7 @@ public enum PlacementEvaluator {
                 }
 
                 guard experiment.status == .running else {
-                    log(.warn, "Audience '\(audience.name)' matched but experiment status is '\(experiment.status)' — no paywall to show")
+                    AWLogger.log(.warn, "Audience '\(audience.name)' matched but experiment status is '\(experiment.status)' — no paywall to show")
                     return PlacementResult(
                         campaignId: campaign.id,
                         audienceId: audience.id,
@@ -152,17 +152,8 @@ public enum PlacementEvaluator {
         }
 
         #if DEBUG
-        log(.warn, "No match for placement '\(placement)': checked \(campaignsChecked) active campaigns, \(campaignsWithPlacement) had this placement")
+        AWLogger.log(.warn, "No match for placement '\(placement)': checked \(campaignsChecked) active campaigns, \(campaignsWithPlacement) had this placement")
         #endif
         return nil
-    }
-
-    /// @autoclosure defers string interpolation until after the level check
-    private static func log(_ level: LogLevel, _ message: @autoclosure () -> String) {
-        #if DEBUG
-        if level >= .warn {
-            print("[AgentWallie] [\(level)] [PlacementEvaluator] \(message())")
-        }
-        #endif
     }
 }

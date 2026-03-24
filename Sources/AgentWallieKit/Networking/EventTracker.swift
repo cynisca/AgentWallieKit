@@ -93,9 +93,7 @@ public final class EventTracker: @unchecked Sendable {
                 queue.async(flags: .barrier) { [weak self] in
                     self?.eventQueue.insert(contentsOf: eventsToSend, at: 0)
                 }
-                #if DEBUG
-                print("[AgentWallie] [EventTracker] Flush failed: \(error)")
-                #endif
+                AWLogger.log(.error, "EventTracker flush failed: \(error)")
             }
         }
     }

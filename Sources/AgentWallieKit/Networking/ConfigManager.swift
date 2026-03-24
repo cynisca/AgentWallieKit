@@ -40,7 +40,7 @@ public final class ConfigManager: @unchecked Sendable {
                 do {
                     try await self?.fetchConfig()
                 } catch {
-                    Self.log(.error, "Config refresh failed: \(error)")
+                    AWLogger.log(.error, "Config refresh failed: \(error)")
                 }
             }
         }
@@ -59,7 +59,7 @@ public final class ConfigManager: @unchecked Sendable {
         do {
             config = try JSONDecoder().decode(SDKConfig.self, from: data)
         } catch {
-            Self.log(.error, "Failed to decode cached config: \(error)")
+            AWLogger.log(.error, "Failed to decode cached config: \(error)")
             // Clear corrupt cache so we don't keep failing
             defaults.removeObject(forKey: cacheKey)
         }
@@ -68,12 +68,6 @@ public final class ConfigManager: @unchecked Sendable {
     private func cacheConfig(_ config: SDKConfig) {
         guard let data = try? JSONEncoder().encode(config) else { return }
         defaults.set(data, forKey: cacheKey)
-    }
-
-    private static func log(_ level: LogLevel, _ message: String) {
-        #if DEBUG
-        print("[AgentWallie] [\(level)] \(message)")
-        #endif
     }
 
     deinit {
