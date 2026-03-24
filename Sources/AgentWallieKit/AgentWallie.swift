@@ -47,6 +47,8 @@ public final class AgentWallie: @unchecked Sendable {
     private var currentPaywallSchema: PaywallSchema?
     private var currentPaywallId: String?
     private var currentCampaignId: String?
+    private var currentExperimentId: String?
+    private var currentVariantId: String?
     private var productCache: StoreKitProductCache?
     private var entitlementManager: EntitlementManager?
     private(set) var resolvedProducts: [ResolvedProductInfo] = []
@@ -305,6 +307,8 @@ public final class AgentWallie: @unchecked Sendable {
         self.currentPaywallSchema = schema
         self.currentPaywallId = paywallId
         self.currentCampaignId = campaignId
+        self.currentExperimentId = experimentId
+        self.currentVariantId = variantId
 
         let info = PaywallPresentationInfo(
             paywallId: paywallId,
@@ -318,7 +322,9 @@ public final class AgentWallie: @unchecked Sendable {
         eventTracker?.track(
             name: "paywall_open",
             campaignId: campaignId,
-            paywallId: paywallId
+            paywallId: paywallId,
+            experimentId: experimentId,
+            variantId: variantId
         )
 
         delegate?.didPresentPaywall(info: info)
@@ -350,7 +356,9 @@ public final class AgentWallie: @unchecked Sendable {
                 name: "purchase_started",
                 properties: ["slot": slotName, "store_product_id": storeProductId],
                 campaignId: currentCampaignId,
-                paywallId: currentPaywallId
+                paywallId: currentPaywallId,
+                experimentId: currentExperimentId,
+                variantId: currentVariantId
             )
 
             Task {
@@ -366,7 +374,9 @@ public final class AgentWallie: @unchecked Sendable {
                             name: "transaction_complete",
                             properties: ["slot": slotName, "store_product_id": storeProductId],
                             campaignId: currentCampaignId,
-                            paywallId: currentPaywallId
+                            paywallId: currentPaywallId,
+                            experimentId: currentExperimentId,
+                            variantId: currentVariantId
                         )
                         delegate?.didCompletePurchase(productId: storeProductId)
                     }
@@ -379,7 +389,9 @@ public final class AgentWallie: @unchecked Sendable {
             eventTracker?.track(
                 name: "restore_started",
                 campaignId: currentCampaignId,
-                paywallId: currentPaywallId
+                paywallId: currentPaywallId,
+                experimentId: currentExperimentId,
+                variantId: currentVariantId
             )
 
             Task {
@@ -416,7 +428,9 @@ public final class AgentWallie: @unchecked Sendable {
             eventTracker?.track(
                 name: "paywall_close",
                 campaignId: currentCampaignId,
-                paywallId: currentPaywallId
+                paywallId: currentPaywallId,
+                experimentId: currentExperimentId,
+                variantId: currentVariantId
             )
 
         default:
@@ -648,6 +662,29 @@ public final class AgentWallie: @unchecked Sendable {
 
     private func log(_ level: LogLevel, _ message: String) {
         AWLogger.log(level, message)
+    }
+
+    // MARK: - Variant Preview (Debug Only)
+
+    /// Preview a specific variant (debug only). Overrides normal assignment.
+    public func previewVariant(experimentId: String, variantId: String) {
+        #if DEBUG
+        assignmentStore?.saveAssignment(
+            userId: userManager?.effectiveUserId ?? "",
+            experimentId: experimentId,
+            assignment: StoredAssignment(variantId: variantId, paywallId: nil, isHoldout: false, assignedAt: Date())
+        )
+        log(.info, "Preview mode: forcing variant \(variantId) for experiment \(experimentId)")
+        #endif
+    }
+
+    /// Clear variant preview (restore normal assignment).
+    public func clearPreview(experimentId: String) {
+        #if DEBUG
+        if let userId = userManager?.effectiveUserId {
+            assignmentStore?.clearAssignment(userId: userId, experimentId: experimentId)
+        }
+        #endif
     }
 
     // MARK: - Custom View Registration

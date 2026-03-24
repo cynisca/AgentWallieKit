@@ -45,7 +45,9 @@ public final class EventTracker: @unchecked Sendable {
         name: String,
         properties: [String: Any]? = nil,
         campaignId: String? = nil,
-        paywallId: String? = nil
+        paywallId: String? = nil,
+        experimentId: String? = nil,
+        variantId: String? = nil
     ) {
         let codableProps: [String: AnyCodable]? = properties?.mapValues { AnyCodable($0) }
 
@@ -55,7 +57,9 @@ public final class EventTracker: @unchecked Sendable {
             eventName: name,
             properties: codableProps,
             campaignId: campaignId,
-            paywallId: paywallId
+            paywallId: paywallId,
+            experimentId: experimentId,
+            variantId: variantId
         )
 
         // Store in recent events buffer for debug overlay
