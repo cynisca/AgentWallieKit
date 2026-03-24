@@ -19,35 +19,31 @@ struct CTAButtonComponentView: View {
         return resolver.resolve(subtitle)
     }
 
-    /// Effective height: explicit style height, or default 56pt, plus any padding_vertical
     private var effectiveHeight: CGFloat {
         let baseHeight = data.style?.height?.doubleValue.map { CGFloat($0) } ?? 56
         let verticalPadding = CGFloat(data.style?.paddingVertical ?? 0)
         return baseHeight + verticalPadding * 2
     }
 
-    var body: some View {
-        Button(action: {
-            onAction(data.props.action, resolveActionParam(for: data.props))
-        }) {
-            VStack(spacing: 4) {
-                Text(resolvedText)
-                    .font(resolveFont(textStyle: "headline", fontSize: data.style?.fontSize, fontFamily: data.style?.fontFamily, theme: theme))
-                    .foregroundColor(resolveColor(data.style?.textColor ?? data.style?.color, theme: theme) ?? .white)
+    private var bgColor: Color {
+        resolveColor(data.style?.backgroundColor, theme: theme) ?? Color(hex: theme?.primary ?? PaywallTheme.defaultPrimary)
+    }
 
-                if let subtitle = resolvedSubtitle {
-                    Text(subtitle)
-                        .font(resolveFont(textStyle: "subheadline", fontSize: nil, fontFamily: data.style?.fontFamily, theme: theme))
-                        .foregroundColor((resolveColor(data.style?.textColor ?? data.style?.color, theme: theme) ?? .white).opacity(0.8))
-                }
-            }
-            .frame(maxWidth: .infinity)
-            .frame(height: effectiveHeight)
-            .background(resolveColor(data.style?.backgroundColor, theme: theme) ?? Color(hex: theme?.primary ?? PaywallTheme.defaultPrimary))
-            .cornerRadius(cornerRadius)
-            .contentShape(Rectangle())
+    private var fgColor: Color {
+        resolveColor(data.style?.textColor ?? data.style?.color, theme: theme) ?? .white
+    }
+
+    var body: some View {
+        Button {
+            onAction(data.props.action, resolveActionParam(for: data.props))
+        } label: {
+            Text(resolvedText)
+                .font(resolveFont(textStyle: "headline", fontSize: data.style?.fontSize, fontFamily: data.style?.fontFamily, theme: theme))
+                .foregroundColor(fgColor)
+                .frame(maxWidth: .infinity, minHeight: effectiveHeight)
         }
-        .buttonStyle(CTAButtonStyle())
+        .background(bgColor)
+        .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
         .modifier(StyleModifier(style: data.style, theme: theme, skipBackground: true, skipCornerRadius: true, skipHeight: true, skipPaddingVertical: true))
     }
 
@@ -56,15 +52,6 @@ struct CTAButtonComponentView: View {
             return CGFloat(cr)
         }
         return CGFloat(theme?.cornerRadius ?? 12)
-    }
-}
-
-/// Plain button style that preserves tap handling in ScrollView
-@available(iOS 16.0, *)
-struct CTAButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .opacity(configuration.isPressed ? 0.85 : 1.0)
     }
 }
 
