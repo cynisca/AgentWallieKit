@@ -123,7 +123,8 @@ public enum PlacementEvaluator {
                 let stored = StoredAssignment(
                     variantId: assignment?.variantId,
                     paywallId: assignment?.paywallId,
-                    isHoldout: assignment == nil
+                    isHoldout: assignment == nil,
+                    assignedAt: Date()
                 )
                 assignmentStore.saveAssignment(
                     userId: userId,

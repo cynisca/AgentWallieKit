@@ -5,11 +5,13 @@ public struct StoredAssignment: Codable, Sendable {
     public let variantId: String?
     public let paywallId: String?
     public let isHoldout: Bool
+    public let assignedAt: Date
 
-    public init(variantId: String?, paywallId: String?, isHoldout: Bool) {
+    public init(variantId: String?, paywallId: String?, isHoldout: Bool, assignedAt: Date = Date()) {
         self.variantId = variantId
         self.paywallId = paywallId
         self.isHoldout = isHoldout
+        self.assignedAt = assignedAt
     }
 }
 
@@ -53,6 +55,13 @@ public final class AssignmentStore: @unchecked Sendable {
         }
     }
 
+    /// Clear a single assignment for a user + experiment.
+    public func clearAssignment(userId: String, experimentId: String) {
+        queue.sync {
+            defaults.removeObject(forKey: key(userId: userId, experimentId: experimentId))
+        }
+    }
+
     public func clearAll() {
         queue.sync {
             let allKeys = defaults.dictionaryRepresentation().keys
@@ -60,5 +69,18 @@ public final class AssignmentStore: @unchecked Sendable {
                 defaults.removeObject(forKey: key)
             }
         }
+    }
+
+    /// Clear all assignments across all users and experiments, forcing re-assignment.
+    public func reassignAll() {
+        clearAll()
+    }
+
+    /// Returns how long ago the assignment was made, or nil if no assignment exists.
+    public func getAssignmentAge(userId: String, experimentId: String) -> TimeInterval? {
+        guard let assignment = getAssignment(userId: userId, experimentId: experimentId) else {
+            return nil
+        }
+        return Date().timeIntervalSince(assignment.assignedAt)
     }
 }

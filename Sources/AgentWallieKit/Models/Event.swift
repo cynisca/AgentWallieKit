@@ -10,6 +10,8 @@ public struct AnalyticsEvent: Codable, Sendable {
     public let properties: [String: AnyCodable]?
     public let campaignId: String?
     public let paywallId: String?
+    public let experimentId: String?
+    public let variantId: String?
 
     public init(
         id: String = UUID().uuidString,
@@ -19,7 +21,9 @@ public struct AnalyticsEvent: Codable, Sendable {
         timestamp: Date = Date(),
         properties: [String: AnyCodable]? = nil,
         campaignId: String? = nil,
-        paywallId: String? = nil
+        paywallId: String? = nil,
+        experimentId: String? = nil,
+        variantId: String? = nil
     ) {
         self.id = id
         self.deviceId = deviceId
@@ -29,6 +33,8 @@ public struct AnalyticsEvent: Codable, Sendable {
         self.properties = properties
         self.campaignId = campaignId
         self.paywallId = paywallId
+        self.experimentId = experimentId
+        self.variantId = variantId
     }
 
     enum CodingKeys: String, CodingKey {
@@ -40,6 +46,8 @@ public struct AnalyticsEvent: Codable, Sendable {
         case properties
         case campaignId = "campaign_id"
         case paywallId = "paywall_id"
+        case experimentId = "experiment_id"
+        case variantId = "variant_id"
     }
 }
 
