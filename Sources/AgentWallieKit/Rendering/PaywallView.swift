@@ -203,6 +203,15 @@ public struct PaywallView: View {
         switch action {
         case .close:
             onDismiss()
+        case .purchase, .selectProduct:
+            // Resolve "selected" to the actual product slot from the picker
+            let resolvedParam: String?
+            if param == "selected", let products = schema.products, selectedProductIndex < products.count {
+                resolvedParam = products[selectedProductIndex].slot
+            } else {
+                resolvedParam = param
+            }
+            onAction(action, resolvedParam)
         default:
             onAction(action, param)
         }

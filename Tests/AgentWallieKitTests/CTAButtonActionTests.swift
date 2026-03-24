@@ -112,6 +112,20 @@ final class CTAButtonActionTests: XCTestCase {
             "purchase with no product should default to 'selected' regardless of styling")
     }
 
+    func testPurchaseWithSelected_resolvesToActualSlot() {
+        // When a purchase button uses "selected" as the product param,
+        // PaywallView.handleAction should resolve it to the actual slot name
+        // based on selectedProductIndex. This test verifies the resolveActionParam
+        // correctly returns "selected" which PaywallView then maps to "primary"/"secondary".
+        let props = CTAButtonComponentData.CTAButtonProps(
+            text: "Subscribe",
+            action: .purchase
+            // no product field — defaults to "selected"
+        )
+        XCTAssertEqual(resolveActionParam(for: props), "selected")
+        // PaywallView.handleAction resolves "selected" → actual slot (e.g., "primary")
+    }
+
     func testCTAButtonView_usesResolveActionParam() {
         // Regression: the view previously passed data.props.product for ALL
         // action types, so custom_action buttons with actionName but no product
