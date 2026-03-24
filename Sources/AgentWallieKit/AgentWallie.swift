@@ -426,26 +426,28 @@ public final class AgentWallie: @unchecked Sendable {
 
     /// Resolve a slot name (e.g., "primary") to an App Store product ID.
     private func resolveStoreProductId(slotName: String) -> String? {
-        // 1. Find the slot in the current paywall's products array
         guard let slot = currentPaywallSchema?.products?.first(where: { $0.slot == slotName }) else {
             log(.warn, "No product slot named '\(slotName)' in current paywall.")
             return nil
         }
 
-        // 2. Look up the product by its productId in config.products
-        guard let productId = slot.productId,
-              let config = configManager?.config,
-              let product = config.products.first(where: { $0.id == productId }) else {
-            // Fallback: try matching slot name directly against config products
-            if let config = configManager?.config,
-               let product = config.products.first(where: { $0.id == slotName }) {
-                return product.storeProductId
-            }
+        guard let productId = slot.productId, let config = configManager?.config else {
             log(.warn, "No product found for slot '\(slotName)' with productId '\(slot.productId ?? "nil")'.")
             return nil
         }
 
-        return product.storeProductId
+        // Match by config product UUID
+        if let product = config.products.first(where: { $0.id == productId }) {
+            return product.storeProductId
+        }
+
+        // Match by store product ID (paywall may reference store ID directly)
+        if let product = config.products.first(where: { $0.storeProductId == productId }) {
+            return product.storeProductId
+        }
+
+        log(.warn, "No product found for slot '\(slotName)' with productId '\(productId)'.")
+        return nil
     }
 
     /// Prefetch StoreKit products and resolve product info for paywall rendering.
