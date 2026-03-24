@@ -20,7 +20,9 @@ public final class AgentWallie: @unchecked Sendable {
     // MARK: - Public Properties
 
     /// Delegate for receiving SDK lifecycle events.
-    public weak var delegate: AgentWallieDelegate?
+    public weak var delegate: AgentWallieDelegate? {
+        didSet { AWLogger.delegate = delegate }
+    }
 
     /// The current subscription status. Set this manually or let StoreKitManager update it.
     public var subscriptionStatus: SubscriptionStatus = .unknown
@@ -69,6 +71,8 @@ public final class AgentWallie: @unchecked Sendable {
 
         self.apiKey = apiKey
         self.options = options
+
+        AWLogger.configure(logLevel: options.logLevel, delegate: delegate)
 
         let baseURL = options.networkEnvironment.baseURL
         apiClient = APIClient(apiKey: apiKey, baseURL: baseURL)
@@ -422,26 +426,28 @@ public final class AgentWallie: @unchecked Sendable {
 
     /// Resolve a slot name (e.g., "primary") to an App Store product ID.
     private func resolveStoreProductId(slotName: String) -> String? {
-        // 1. Find the slot in the current paywall's products array
         guard let slot = currentPaywallSchema?.products?.first(where: { $0.slot == slotName }) else {
             log(.warn, "No product slot named '\(slotName)' in current paywall.")
             return nil
         }
 
-        // 2. Look up the product by its productId in config.products
-        guard let productId = slot.productId,
-              let config = configManager?.config,
-              let product = config.products.first(where: { $0.id == productId }) else {
-            // Fallback: try matching slot name directly against config products
-            if let config = configManager?.config,
-               let product = config.products.first(where: { $0.id == slotName }) {
-                return product.storeProductId
-            }
+        guard let productId = slot.productId, let config = configManager?.config else {
             log(.warn, "No product found for slot '\(slotName)' with productId '\(slot.productId ?? "nil")'.")
             return nil
         }
 
-        return product.storeProductId
+        // Match by config product UUID
+        if let product = config.products.first(where: { $0.id == productId }) {
+            return product.storeProductId
+        }
+
+        // Match by store product ID (paywall may reference store ID directly)
+        if let product = config.products.first(where: { $0.storeProductId == productId }) {
+            return product.storeProductId
+        }
+
+        log(.warn, "No product found for slot '\(slotName)' with productId '\(productId)'.")
+        return nil
     }
 
     /// Prefetch StoreKit products and resolve product info for paywall rendering.
@@ -641,11 +647,7 @@ public final class AgentWallie: @unchecked Sendable {
     }
 
     private func log(_ level: LogLevel, _ message: String) {
-        guard let options = options, level >= options.logLevel else { return }
-        delegate?.handleLog(level: level, message: message)
-        #if DEBUG
-        print("[AgentWallie] [\(level)] \(message)")
-        #endif
+        AWLogger.log(level, message)
     }
 
     // MARK: - Custom View Registration
