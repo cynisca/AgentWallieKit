@@ -53,6 +53,8 @@ public final class AgentWallie: @unchecked Sendable {
     private var entitlementManager: EntitlementManager?
     private(set) var resolvedProducts: [ResolvedProductInfo] = []
     private var lastPrefetchedProductIds: Set<String> = []
+    private var productsReadyContinuation: CheckedContinuation<Void, Never>?
+    private var productsAreReady = false
     private var debugProvider: DebugDataProvider?
     private var shakeWindow: AnyObject?
 
@@ -95,6 +97,9 @@ public final class AgentWallie: @unchecked Sendable {
             self.entitlementManager?.updateProductMapping(products: config.products)
             Task {
                 await self.prefetchAndResolveProducts(config: config)
+                self.productsAreReady = true
+                self.productsReadyContinuation?.resume()
+                self.productsReadyContinuation = nil
                 await self.entitlementManager?.refreshFromStoreKit()
                 if let em = self.entitlementManager {
                     self.entitlements = em.activeEntitlements
@@ -215,8 +220,9 @@ public final class AgentWallie: @unchecked Sendable {
 
         log(.info, "Matched paywall '\(schema.name)' for placement '\(placement)'")
 
-        // Present the paywall
+        // Wait for products to be resolved before presenting
         Task { @MainActor in
+            await self.waitForProducts()
             self.presentPaywallSchema(
                 schema,
                 paywallId: paywallId,
@@ -462,6 +468,18 @@ public final class AgentWallie: @unchecked Sendable {
 
         log(.warn, "No product found for slot '\(slotName)' with productId '\(productId)'.")
         return nil
+    }
+
+    /// Wait for products to be resolved (with timeout).
+    private func waitForProducts() async {
+        if productsAreReady { return }
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            if productsAreReady {
+                continuation.resume()
+                return
+            }
+            productsReadyContinuation = continuation
+        }
     }
 
     /// Prefetch StoreKit products and resolve product info for paywall rendering.
