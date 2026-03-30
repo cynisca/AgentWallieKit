@@ -82,9 +82,10 @@ public struct ProductResolver {
         products: [AWProduct],
         storeProducts: [String: any StoreProductProviding]
     ) -> ResolvedProductInfo {
-        // Find the AWProduct for this slot
+        // Find the AWProduct for this slot (match by UUID or store product ID)
         let awProduct = slot.productId.flatMap { pid in
             products.first(where: { $0.id == pid })
+                ?? products.first(where: { $0.storeProductId == pid })
         }
 
         // Find the StoreKit product if available
