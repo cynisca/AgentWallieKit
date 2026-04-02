@@ -105,7 +105,15 @@ public struct ProductResolver {
         awProduct: AWProduct?,
         storeProduct: any StoreProductProviding
     ) -> ResolvedProductInfo {
-        let periodUnit = storeProduct.subscriptionPeriodUnit ?? .month
+        // Prefer the server-configured displayPeriod over StoreKit's period unit.
+        // In sandbox, Apple reports weekly subscriptions as .day (accelerated time),
+        // which causes the paywall to show "/day" instead of "/wk".
+        let periodUnit: PeriodUnit
+        if let serverPeriod = awProduct?.displayPeriod, let parsed = periodUnitFromString(serverPeriod) {
+            periodUnit = parsed
+        } else {
+            periodUnit = storeProduct.subscriptionPeriodUnit ?? .month
+        }
         let periodValue = storeProduct.subscriptionPeriodValue ?? 1
         let period = periodString(unit: periodUnit)
         let periodLabel = periodLabelString(unit: periodUnit)
@@ -199,6 +207,17 @@ public struct ProductResolver {
         case .week: return "/wk"
         case .month: return "/mo"
         case .year: return "/yr"
+        }
+    }
+
+    /// Parse a period string ("day", "week", "month", "year") into a PeriodUnit.
+    public static func periodUnitFromString(_ period: String) -> PeriodUnit? {
+        switch period.lowercased() {
+        case "day": return .day
+        case "week": return .week
+        case "month": return .month
+        case "year": return .year
+        default: return nil
         }
     }
 

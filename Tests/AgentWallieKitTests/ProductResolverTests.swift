@@ -276,6 +276,66 @@ final class ProductResolverTests: XCTestCase {
         XCTAssertNil(resolved[0].productId)
     }
 
+    // MARK: - Sandbox Period Override
+
+    func testSandboxWeeklyReportedAsDay_UsesServerDisplayPeriod() {
+        // In sandbox, Apple reports weekly subscriptions as .day (accelerated time).
+        // The SDK should prefer awProduct.displayPeriod ("week") over StoreKit's .day.
+        let slots = [makeSlot("primary", label: "Weekly", productId: "prod_weekly")]
+        let products = [
+            makeAWProduct(
+                id: "prod_weekly",
+                storeProductId: "com.app.weekly",
+                displayPeriod: "week"
+            ),
+        ]
+
+        let storeProducts: [String: any StoreProductProviding] = [
+            "com.app.weekly": MockStoreProduct(
+                id: "com.app.weekly",
+                displayPrice: "$4.99",
+                price: Decimal(string: "4.99")!,
+                subscriptionPeriodUnit: .day,  // sandbox reports .day for weekly
+                subscriptionPeriodValue: 7
+            ),
+        ]
+
+        let resolved = ProductResolver.resolve(slots: slots, products: products, storeProducts: storeProducts)
+        XCTAssertEqual(resolved[0].period, "week", "Should use server displayPeriod, not StoreKit's sandbox .day")
+        XCTAssertEqual(resolved[0].periodLabel, "/wk", "Should show /wk, not /day")
+    }
+
+    func testNoServerDisplayPeriod_FallsBackToStoreKit() {
+        // When awProduct has no displayPeriod, fall back to StoreKit's value
+        let slots = [makeSlot("primary", label: "Monthly", productId: "prod_monthly")]
+        let products = [
+            makeAWProduct(id: "prod_monthly", storeProductId: "com.app.monthly"),
+        ]
+
+        let storeProducts: [String: any StoreProductProviding] = [
+            "com.app.monthly": MockStoreProduct(
+                id: "com.app.monthly",
+                displayPrice: "$9.99",
+                price: Decimal(string: "9.99")!,
+                subscriptionPeriodUnit: .month,
+                subscriptionPeriodValue: 1
+            ),
+        ]
+
+        let resolved = ProductResolver.resolve(slots: slots, products: products, storeProducts: storeProducts)
+        XCTAssertEqual(resolved[0].period, "month")
+        XCTAssertEqual(resolved[0].periodLabel, "/mo")
+    }
+
+    func testPeriodUnitFromString() {
+        XCTAssertEqual(ProductResolver.periodUnitFromString("day"), .day)
+        XCTAssertEqual(ProductResolver.periodUnitFromString("week"), .week)
+        XCTAssertEqual(ProductResolver.periodUnitFromString("month"), .month)
+        XCTAssertEqual(ProductResolver.periodUnitFromString("year"), .year)
+        XCTAssertEqual(ProductResolver.periodUnitFromString("Week"), .week)
+        XCTAssertNil(ProductResolver.periodUnitFromString("biweekly"))
+    }
+
     func testStoreProductPriceAndPeriodLabel() {
         let slots = [makeSlot("primary", label: "Yearly", productId: "prod_yearly")]
         let products = [makeAWProduct(id: "prod_yearly", storeProductId: "com.app.yearly")]
