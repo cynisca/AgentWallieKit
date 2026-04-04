@@ -67,6 +67,13 @@ public struct ProductSlot: Codable, Sendable {
         case slot, label
         case productId = "product_id"
     }
+
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        slot = try container.decode(String.self, forKey: .slot)
+        label = try container.decodeIfPresent(String.self, forKey: .label) ?? container.decode(String.self, forKey: .slot)
+        productId = try container.decodeIfPresent(String.self, forKey: .productId)
+    }
 }
 
 /// Resolved product information combining paywall slot data, dashboard product config,
