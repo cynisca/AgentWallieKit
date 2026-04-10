@@ -11,6 +11,9 @@ public protocol AgentWallieDelegate: AnyObject {
     /// Called when a purchase completes successfully.
     func didCompletePurchase(productId: String)
 
+    /// Called when a purchase fails.
+    func didFailPurchase(productId: String, error: Error)
+
     /// Called when purchases are restored.
     func didRestorePurchases()
 
@@ -29,6 +32,7 @@ public extension AgentWallieDelegate {
     func didPresentPaywall(info: PaywallPresentationInfo) {}
     func didDismissPaywall(info: PaywallPresentationInfo) {}
     func didCompletePurchase(productId: String) {}
+    func didFailPurchase(productId: String, error: Error) {}
     func didRestorePurchases() {}
     func handleCustomAction(name: String) {}
     func handleLog(level: LogLevel, message: String) {}

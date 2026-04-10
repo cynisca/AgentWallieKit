@@ -388,6 +388,7 @@ public final class AgentWallie: @unchecked Sendable {
                     }
                 } catch {
                     log(.error, "Purchase failed: \(error)")
+                    delegate?.didFailPurchase(productId: storeProductId, error: error)
                 }
             }
 
@@ -505,7 +506,8 @@ public final class AgentWallie: @unchecked Sendable {
             do {
                 try await productCache?.prefetch(productIds: appleProductIds)
                 lastPrefetchedProductIds = appleProductIds
-                log(.info, "Prefetched \(appleProductIds.count) StoreKit products.")
+                let fetched = await productCache?.allProducts() ?? [:]
+                log(.info, "Prefetched \(fetched.count) StoreKit products.")
             } catch {
                 log(.error, "Failed to prefetch StoreKit products: \(error)")
             }
