@@ -51,7 +51,12 @@ public final class AgentWallie: @unchecked Sendable {
     private var currentVariantId: String?
     private var productCache: StoreKitProductCache?
     private var entitlementManager: EntitlementManager?
-    private(set) var resolvedProducts: [ResolvedProductInfo] = []
+    private var resolvedProductsByPaywallId: [String: [ResolvedProductInfo]] = [:]
+    // Resolved products for the paywall currently being presented.
+    private var resolvedProducts: [ResolvedProductInfo] {
+        guard let id = currentPaywallId else { return [] }
+        return resolvedProductsByPaywallId[id] ?? []
+    }
     private var lastPrefetchedProductIds: Set<String> = []
     private var productsReadyContinuation: CheckedContinuation<Void, Never>?
     private var productsAreReady = false
@@ -521,20 +526,23 @@ public final class AgentWallie: @unchecked Sendable {
             }
         }
 
-        // Resolve products for all paywalls — collect all unique slots
-        let allSlots = config.paywalls.values.compactMap(\.products).flatMap { $0 }
-        let uniqueSlots = Dictionary(grouping: allSlots, by: \.slot)
-            .compactMapValues(\.first)
-            .values
-            .sorted { $0.slot < $1.slot }
+        // Resolve products per paywall so slot names (primary/secondary) are
+        // scoped to each paywall's own product mapping. A global dedup by slot
+        // name breaks multi-app projects where two paywalls share slot names
+        // but map them to different products.
+        var byPaywall: [String: [ResolvedProductInfo]] = [:]
+        for (paywallId, paywall) in config.paywalls {
+            guard let slots = paywall.products, !slots.isEmpty else { continue }
+            byPaywall[paywallId] = ProductResolver.resolve(
+                slots: slots,
+                products: config.products,
+                storeProducts: storeProducts
+            )
+        }
+        resolvedProductsByPaywallId = byPaywall
 
-        resolvedProducts = ProductResolver.resolve(
-            slots: Array(uniqueSlots),
-            products: config.products,
-            storeProducts: storeProducts
-        )
-
-        log(.info, "Resolved \(resolvedProducts.count) products for paywall rendering.")
+        let totalResolved = byPaywall.values.map(\.count).reduce(0, +)
+        log(.info, "Resolved products for \(byPaywall.count) paywalls (\(totalResolved) slot mappings total).")
     }
 
     // MARK: - Debug Overlay
