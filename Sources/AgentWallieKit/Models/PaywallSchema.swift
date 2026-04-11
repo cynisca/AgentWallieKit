@@ -665,15 +665,18 @@ public struct FeatureListComponentData: Codable, Sendable {
     public struct FeatureListProps: Codable, Sendable {
         public let items: [FeatureItem]
         public let iconColor: String?
+        public let cardPerItem: Bool?
 
-        public init(items: [FeatureItem], iconColor: String? = nil) {
+        public init(items: [FeatureItem], iconColor: String? = nil, cardPerItem: Bool? = nil) {
             self.items = items
             self.iconColor = iconColor
+            self.cardPerItem = cardPerItem
         }
 
         enum CodingKeys: String, CodingKey {
             case items
             case iconColor = "icon_color"
+            case cardPerItem = "card_per_item"
         }
     }
 
