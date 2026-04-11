@@ -13,7 +13,7 @@ struct StackComponentView: View {
 
         Group {
             if data.props.direction == "horizontal" {
-                HStack(spacing: spacing) {
+                HStack(alignment: verticalCrossAxisAlignment, spacing: spacing) {
                     ForEach(Array(data.children.enumerated()), id: \.offset) { _, child in
                         renderComponent(child)
                     }
@@ -25,7 +25,7 @@ struct StackComponentView: View {
                     }
                 }
             } else {
-                VStack(spacing: spacing) {
+                VStack(alignment: horizontalCrossAxisAlignment, spacing: spacing) {
                     ForEach(Array(data.children.enumerated()), id: \.offset) { _, child in
                         renderComponent(child)
                     }
@@ -33,6 +33,24 @@ struct StackComponentView: View {
             }
         }
         .modifier(StyleModifier(style: data.style, theme: theme))
+    }
+
+    /// Cross-axis alignment for VStack (horizontal axis).
+    private var horizontalCrossAxisAlignment: HorizontalAlignment {
+        switch data.props.alignment {
+        case "leading": return .leading
+        case "trailing": return .trailing
+        default: return .center
+        }
+    }
+
+    /// Cross-axis alignment for HStack (vertical axis).
+    private var verticalCrossAxisAlignment: VerticalAlignment {
+        switch data.props.alignment {
+        case "top": return .top
+        case "bottom": return .bottom
+        default: return .center
+        }
     }
 
     private var zStackAlignment: Alignment {

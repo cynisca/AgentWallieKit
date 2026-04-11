@@ -19,8 +19,8 @@ struct TextComponentView: View {
     var body: some View {
         renderedText
             .font(resolvedFont)
-            .multilineTextAlignment(textAlignment(data.props.alignment))
-            .frame(maxWidth: .infinity, alignment: frameAlignment(data.props.alignment))
+            .multilineTextAlignment(textAlignment(data.props.alignment ?? data.style?.alignment))
+            .frame(maxWidth: .infinity, alignment: frameAlignment(data.props.alignment ?? data.style?.alignment))
             .foregroundColor(resolveColor(data.style?.color ?? data.style?.textColor, theme: theme) ?? Color(hex: theme?.textPrimary ?? PaywallTheme.defaultTextPrimary))
             .applyOptionalTracking(data.style?.letterSpacing)
             .modifier(StyleModifier(style: data.style, theme: theme))

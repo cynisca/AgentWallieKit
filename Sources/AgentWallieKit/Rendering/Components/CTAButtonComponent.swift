@@ -37,14 +37,30 @@ struct CTAButtonComponentView: View {
         Button {
             onAction(data.props.action, resolveActionParam(for: data.props))
         } label: {
-            Text(resolvedText)
-                .font(resolveFont(textStyle: "headline", fontSize: data.style?.fontSize, fontFamily: data.style?.fontFamily, theme: theme))
-                .foregroundColor(fgColor)
-                .frame(maxWidth: .infinity, minHeight: effectiveHeight)
+            VStack(spacing: 2) {
+                Text(resolvedText)
+                    .font(resolveFont(textStyle: "headline", fontSize: data.style?.fontSize, fontFamily: data.style?.fontFamily, theme: theme))
+                    .foregroundColor(fgColor)
+                if let subtitle = resolvedSubtitle {
+                    Text(subtitle)
+                        .font(resolveFont(textStyle: "footnote", fontSize: nil, fontFamily: data.style?.fontFamily, theme: theme))
+                        .foregroundColor(fgColor.opacity(0.75))
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: effectiveHeight)
         }
-        .background(bgColor)
+        .background(buttonBackground)
         .clipShape(RoundedRectangle(cornerRadius: cornerRadius))
         .modifier(StyleModifier(style: data.style, theme: theme, skipBackground: true, skipCornerRadius: true, skipHeight: true, skipPaddingVertical: true))
+    }
+
+    @ViewBuilder
+    private var buttonBackground: some View {
+        if let gradient = data.style?.backgroundGradient, !gradient.colors.isEmpty {
+            GradientBackground(gradient: gradient, theme: theme)
+        } else {
+            bgColor
+        }
     }
 
     private var cornerRadius: CGFloat {

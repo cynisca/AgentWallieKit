@@ -196,6 +196,7 @@ struct StyleModifier: ViewModifier {
             }
             .applyIf(!skipBackground) { view in
                 view.applyOptionalBackground(resolveColor(style?.backgroundColor, theme: theme))
+                    .applyGradientBackground(style?.backgroundGradient, theme: theme)
             }
             .applyIf(!skipCornerRadius) { view in
                 view.applyOptionalCornerRadius(style?.cornerRadius?.doubleValue.map { CGFloat($0) })
