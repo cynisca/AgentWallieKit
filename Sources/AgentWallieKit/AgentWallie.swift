@@ -420,9 +420,14 @@ public final class AgentWallie: @unchecked Sendable {
                             self.entitlements = em.activeEntitlements
                             self.subscriptionStatus = em.subscriptionStatus
                         }
+                        var txProps: [String: Any] = ["slot": slotName, "store_product_id": storeProductId]
+                        if let product = await productCache?.product(for: storeProductId) {
+                            txProps["transaction_amount"] = NSDecimalNumber(decimal: product.price).doubleValue
+                            txProps["currency"] = product.priceFormatStyle.currencyCode
+                        }
                         eventTracker?.track(
                             name: "transaction_complete",
-                            properties: ["slot": slotName, "store_product_id": storeProductId],
+                            properties: txProps,
                             campaignId: currentCampaignId,
                             paywallId: currentPaywallId,
                             experimentId: currentExperimentId,

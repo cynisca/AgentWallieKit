@@ -53,7 +53,7 @@ public final class EventTracker: @unchecked Sendable {
 
         let event = AnalyticsEvent(
             deviceId: userManager.deviceId,
-            userId: userManager.userId,
+            userId: userManager.effectiveUserId,
             eventName: name,
             properties: codableProps,
             campaignId: campaignId,
