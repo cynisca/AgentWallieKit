@@ -25,6 +25,9 @@ public protocol AgentWallieDelegate: AnyObject {
 
     /// Called when subscription status or entitlements change.
     func didUpdateSubscriptionStatus(_ status: SubscriptionStatus, entitlements: Set<String>)
+
+    /// Called when config fails to load. Check the error for details.
+    func didFailToLoadConfig(error: Error)
 }
 
 /// Default implementations so delegates only need to implement what they care about.
@@ -37,6 +40,7 @@ public extension AgentWallieDelegate {
     func handleCustomAction(name: String) {}
     func handleLog(level: LogLevel, message: String) {}
     func didUpdateSubscriptionStatus(_ status: SubscriptionStatus, entitlements: Set<String>) {}
+    func didFailToLoadConfig(error: Error) {}
 }
 
 /// Information about a paywall presentation.

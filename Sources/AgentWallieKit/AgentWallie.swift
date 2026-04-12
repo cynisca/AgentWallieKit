@@ -30,6 +30,23 @@ public final class AgentWallie: @unchecked Sendable {
     /// The current set of active entitlements.
     public var entitlements: Set<String> = []
 
+    /// Whether the remote config has been successfully fetched and decoded.
+    public var isConfigLoaded: Bool {
+        configManager?.config != nil
+    }
+
+    /// Suspends until config has loaded (or returns immediately if already loaded).
+    public func waitForConfig() async {
+        if configDidLoad { return }
+        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+            if configDidLoad {
+                continuation.resume()
+                return
+            }
+            configReadyContinuations.append(continuation)
+        }
+    }
+
     // MARK: - Internal Properties
 
     private var apiKey: String?
@@ -58,6 +75,9 @@ public final class AgentWallie: @unchecked Sendable {
         return resolvedProductsByPaywallId[id] ?? []
     }
     private var lastPrefetchedProductIds: Set<String> = []
+    private var pendingPlacements: [(placement: String, handler: (() -> Void)?)] = []
+    private var configReadyContinuations: [CheckedContinuation<Void, Never>] = []
+    private var configDidLoad = false
     private var productsReadyContinuation: CheckedContinuation<Void, Never>?
     private var productsAreReady = false
     private var debugProvider: DebugDataProvider?
@@ -110,6 +130,16 @@ public final class AgentWallie: @unchecked Sendable {
                     self.entitlements = em.activeEntitlements
                     self.subscriptionStatus = em.subscriptionStatus
                 }
+                self.configDidLoad = true
+                for continuation in self.configReadyContinuations {
+                    continuation.resume()
+                }
+                self.configReadyContinuations.removeAll()
+                let pending = self.pendingPlacements
+                self.pendingPlacements.removeAll()
+                for (placement, handler) in pending {
+                    self.register(placement: placement, handler: handler)
+                }
             }
         }
 
@@ -134,6 +164,15 @@ public final class AgentWallie: @unchecked Sendable {
                 log(.info, "Config fetched successfully.")
             } catch {
                 log(.error, "Failed to fetch config: \(error)")
+                delegate?.didFailToLoadConfig(error: error)
+                #if DEBUG
+                print("⚠️ AgentWallie config failed to load: \(error)")
+                #endif
+                // Unblock any waitForConfig() callers — config won't load, don't leave them hanging.
+                for continuation in configReadyContinuations {
+                    continuation.resume()
+                }
+                configReadyContinuations.removeAll()
             }
         }
     }
@@ -186,8 +225,8 @@ public final class AgentWallie: @unchecked Sendable {
         guard let config = configManager?.config,
               let userMgr = userManager,
               let store = assignmentStore else {
-            log(.warn, "Config not ready. Placement '\(placement)' will not evaluate.")
-            handler?()
+            log(.warn, "Config not ready. Placement '\(placement)' queued for evaluation when config loads.")
+            pendingPlacements.append((placement: placement, handler: handler))
             return
         }
 
