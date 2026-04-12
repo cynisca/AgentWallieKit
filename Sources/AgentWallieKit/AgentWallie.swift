@@ -434,6 +434,24 @@ public final class AgentWallie: @unchecked Sendable {
                             variantId: currentVariantId
                         )
                         delegate?.didCompletePurchase(productId: storeProductId)
+
+                        // Track paywall close and auto-dismiss after successful purchase
+                        eventTracker?.track(
+                            name: "paywall_close",
+                            campaignId: currentCampaignId,
+                            paywallId: currentPaywallId,
+                            experimentId: currentExperimentId,
+                            variantId: currentVariantId
+                        )
+                        #if canImport(UIKit)
+                        await MainActor.run {
+                            if let windowScene = UIApplication.shared.connectedScenes
+                                .compactMap({ $0 as? UIWindowScene }).first,
+                               let rootVC = windowScene.windows.first?.rootViewController {
+                                rootVC.presentedViewController?.dismiss(animated: true)
+                            }
+                        }
+                        #endif
                     }
                 } catch {
                     log(.error, "Purchase failed: \(error)")
